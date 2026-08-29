@@ -127,6 +127,39 @@ jobs:
         if: ${{ success() }}
         run: |
           set -euo pipefail
-          docker buildx imagetools create \
-            --tag "${ACR_NAME}.azurecr.io/${IMAGE_REPOSITORY}:latest" \
-            "${{ steps.image.outputs.image }}"
+          registry="${ACR_NAME}.azurecr.io"
+          digest="${{ steps.image.outputs.digest }}"
+          refresh_token="$(az acr login --name "$ACR_NAME" --expose-token --query accessToken -o tsv)"
+          token="$(curl -fsS \
+            -X POST \
+            -H 'Content-Type: application/x-www-form-urlencoded' \
+            --data-urlencode 'grant_type=refresh_token' \
+            --data-urlencode "service=$registry" \
+            --data-urlencode "scope=repository:${IMAGE_REPOSITORY}:pull,push" \
+            --data-urlencode "refresh_token=$refresh_token" \
+            "https://${registry}/oauth2/token" | jq -er .access_token)"
+          manifest="$(mktemp)"
+          headers="$(mktemp)"
+          trap 'rm -f "$manifest" "$headers"' EXIT
+
+          curl -fsS \
+            -H "Authorization: Bearer $token" \
+            -H 'Accept: application/vnd.oci.image.index.v1+json, application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.docker.distribution.manifest.v2+json' \
+            -D "$headers" \
+            -o "$manifest" \
+            "https://${registry}/v2/${IMAGE_REPOSITORY}/manifests/${digest}"
+          content_type="$(awk 'tolower($1) == "content-type:" { gsub(/\r/, "", $2); print $2 }' "$headers" | tail -1)"
+          [[ -n "$content_type" ]]
+          curl -fsS \
+            -X PUT \
+            -H "Authorization: Bearer $token" \
+            -H "Content-Type: $content_type" \
+            --data-binary "@${manifest}" \
+            "https://${registry}/v2/${IMAGE_REPOSITORY}/manifests/latest" \
+            -o /dev/null
+
+          promoted_digest="$(az acr manifest show-metadata \
+            --registry "$ACR_NAME" \
+            --name "${IMAGE_REPOSITORY}:latest" \
+            --query digest -o tsv)"
+          [[ "$promoted_digest" == "$digest" ]]
