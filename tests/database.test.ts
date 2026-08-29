@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import { afterEach, describe, expect, it } from "vitest";
+import { checkDatabase } from "../src/server/db/database.js";
 import { createTestContext, testRoot } from "./test-utils.js";
 
 const contexts: ReturnType<typeof createTestContext>[] = [];
@@ -16,6 +17,17 @@ describe("database foundation", () => {
     expect(context.db.pragma("journal_mode", { simple: true })).toBe("delete");
     expect(context.db.pragma("synchronous", { simple: true })).toBe(1);
     expect(context.db.prepare("SELECT version FROM schema_migrations").pluck().all()).toEqual([1]);
+    const readiness = checkDatabase(context.db, context.config);
+    expect(readiness).toMatchObject({
+      ok: true,
+      pragmas: { journal_mode: "delete", synchronous: "normal", foreign_keys: true },
+      integrity: { quick_check: "ok", foreign_key_violations: 0 },
+      schema: {
+        migration_version: 1,
+        migration_name: "initial-normalized-schema",
+        expected_migration_version: 1
+      }
+    });
   });
 
   it("contains every owned normalized legacy concept", () => {

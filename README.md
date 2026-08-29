@@ -63,6 +63,8 @@ Development identity exists only when `DEV_AUTH_ENABLED=true` and `NODE_ENV` is 
 
 Production authentication is Microsoft Entra/OIDC-ready through `OIDC_ISSUER`, `OIDC_AUDIENCE`, and `OIDC_JWKS_URI`. Tokens are verified against remote JWKS, then resolved to app-local users and household memberships. Protected APIs fail closed when OIDC is unconfigured; viewer memberships cannot mutate records. There are no shared legacy Hearth permissions.
 
+The browser reads the non-secret tenant, client, and delegated scope configuration from `/auth-config.json`, obtains an Entra access token with MSAL, and attaches it to API requests. Production uses the app-local `access_as_user` scope; development identity remains server-only and cannot be enabled in production.
+
 ## Data and storage
 
 SQLite is synchronous `better-sqlite3` with:
@@ -74,7 +76,7 @@ SQLite is synchronous `better-sqlite3` with:
 
 Never use WAL for an Azure Files-backed database. Every user record is directly household-scoped or belongs to a household-scoped parent. Stable legacy IDs are retained as target IDs and recorded permanently in `legacy_identifier_map`, preserving printed HEARTH QR label resolution.
 
-Blob authority is separate from the container filesystem. `BLOB_PROVIDER=local` with `LOCAL_BLOB_PATH` is available only outside production. Production local storage is forbidden; configure Azure Blob Storage later or the adapter reports `not_configured`. Optional AI and weather/geocoding adapters behave the same way and never block readiness.
+Blob authority is separate from the container filesystem. `BLOB_PROVIDER=local` with `LOCAL_BLOB_PATH` is available only outside production. Production local storage is forbidden; Azure Blob Storage uses the Web App managed identity with `AZURE_STORAGE_ACCOUNT_URL`, while a connection string remains a compatibility fallback. Optional AI and weather/geocoding adapters never block readiness.
 
 ## Legacy migration
 
@@ -104,4 +106,4 @@ docker run --rm -p 3000:3000 \
   hearth-v2:local
 ```
 
-The Dockerfile is ready for a later shared-ACR/App-Service source activation. That future work must provide durable `/home/data`, production OIDC values, Azure Blob configuration, and immutable build metadata. This source build does **not** create Azure resources, push an image, deploy, cut over DNS, rename repositories, import live data, or mutate legacy Hearth or Hearth-for-iOS.
+The Dockerfile and `.github/workflows/deploy.yml` publish a linux/amd64 candidate tagged by source SHA and workflow run, pin App Service to the resolved digest, and promote `hearth-v2:latest` only after the exact build is live and ready. Production still requires durable `/home/data`, app-local OIDC values, and managed-identity Blob configuration. Deployment does not cut over DNS, import legacy data, or mutate legacy Hearth or Hearth-for-iOS.

@@ -1,3 +1,5 @@
+import { accessToken } from "./auth";
+
 export type ApiRow = Record<string, string | number | null>;
 
 interface ApiErrorBody {
@@ -20,10 +22,12 @@ export class ApiError extends Error {
 }
 
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const token = path.startsWith("/api/") ? await accessToken() : undefined;
   const response = await fetch(path, {
     ...options,
     headers: {
       "content-type": "application/json",
+      ...(token ? { authorization: `Bearer ${token}` } : {}),
       ...options.headers
     }
   });

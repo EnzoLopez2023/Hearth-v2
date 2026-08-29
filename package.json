@@ -7,6 +7,10 @@
     "node": ">=24"
   },
   "scripts": {
+    "prepare": "node scripts/setup-hooks.mjs",
+    "bump:patch": "node scripts/version.mjs patch",
+    "bump:minor": "node scripts/version.mjs minor",
+    "bump:major": "node scripts/version.mjs major",
     "dev": "concurrently --kill-others \"npm:dev:server\" \"npm:dev:client\"",
     "dev:server": "cross-env DEV_AUTH_ENABLED=true tsx watch src/server/index.ts",
     "dev:client": "vite",
@@ -18,8 +22,10 @@
     "legacy:import": "tsx src/server/legacy/cli.ts"
   },
   "dependencies": {
-    "@fontsource/barlow-condensed": "^5.2.7",
+    "@azure/identity": "^4.13.2",
+    "@azure/msal-browser": "^5.20.0",
     "@azure/storage-blob": "^12.33.0",
+    "@fontsource/barlow-condensed": "^5.2.7",
     "better-sqlite3": "^12.2.0",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
