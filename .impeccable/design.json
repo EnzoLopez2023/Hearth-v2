@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-29T04:21:13.565Z",
+  "title": "Design System: Hearth-v2",
+  "extensions": {
+    "colorMeta": {
+      "floor-light": { "role": "neutral", "displayName": "Light Floor", "canonical": "#e4e7e2", "tonalRamp": ["oklch(15% 0.007 132.4)","oklch(28% 0.007 132.4)","oklch(41% 0.007 132.4)","oklch(54% 0.007 132.4)","oklch(67% 0.007 132.4)","oklch(80% 0.007 132.4)","oklch(90% 0.007 132.4)","oklch(95% 0.007 132.4)"] },
+      "ink": { "role": "neutral", "displayName": "Blueprint Ink", "canonical": "#172a3b", "tonalRamp": ["oklch(15% 0.040 246.8)","oklch(28% 0.040 246.8)","oklch(41% 0.040 246.8)","oklch(54% 0.040 246.8)","oklch(67% 0.040 246.8)","oklch(80% 0.040 246.8)","oklch(90% 0.040 246.8)","oklch(95% 0.040 246.8)"] },
+      "ink-muted": { "role": "neutral", "displayName": "Muted Blueprint Ink", "canonical": "#53626c", "tonalRamp": ["oklch(15% 0.024 237.2)","oklch(28% 0.024 237.2)","oklch(41% 0.024 237.2)","oklch(54% 0.024 237.2)","oklch(67% 0.024 237.2)","oklch(80% 0.024 237.2)","oklch(90% 0.024 237.2)","oklch(95% 0.024 237.2)"] },
+      "mylar": { "role": "neutral", "displayName": "Drafting Mylar", "canonical": "#f3f4ee", "tonalRamp": ["oklch(15% 0.008 114.2)","oklch(28% 0.008 114.2)","oklch(41% 0.008 114.2)","oklch(54% 0.008 114.2)","oklch(67% 0.008 114.2)","oklch(80% 0.008 114.2)","oklch(90% 0.008 114.2)","oklch(95% 0.008 114.2)"] },
+      "mylar-deep": { "role": "neutral", "displayName": "Deep Drafting Mylar", "canonical": "#e7eae4", "tonalRamp": ["oklch(15% 0.009 128.6)","oklch(28% 0.009 128.6)","oklch(41% 0.009 128.6)","oklch(54% 0.009 128.6)","oklch(67% 0.009 128.6)","oklch(80% 0.009 128.6)","oklch(90% 0.009 128.6)","oklch(95% 0.009 128.6)"] },
+      "rule": { "role": "neutral", "displayName": "Rule", "canonical": "#bcc5c6", "tonalRamp": ["oklch(15% 0.010 204.9)","oklch(28% 0.010 204.9)","oklch(41% 0.010 204.9)","oklch(54% 0.010 204.9)","oklch(67% 0.010 204.9)","oklch(80% 0.010 204.9)","oklch(90% 0.010 204.9)","oklch(95% 0.010 204.9)"] },
+      "rule-strong": { "role": "neutral", "displayName": "Strong Rule", "canonical": "#7b8d94", "tonalRamp": ["oklch(15% 0.023 223.2)","oklch(28% 0.023 223.2)","oklch(41% 0.023 223.2)","oklch(54% 0.023 223.2)","oklch(67% 0.023 223.2)","oklch(80% 0.023 223.2)","oklch(90% 0.023 223.2)","oklch(95% 0.023 223.2)"] },
+      "survey": { "role": "primary", "displayName": "Survey Blue", "canonical": "#26668c", "tonalRamp": ["oklch(15% 0.089 238.6)","oklch(28% 0.089 238.6)","oklch(41% 0.089 238.6)","oklch(54% 0.089 238.6)","oklch(67% 0.089 238.6)","oklch(80% 0.089 238.6)","oklch(90% 0.089 238.6)","oklch(95% 0.089 238.6)"] },
+      "survey-deep": { "role": "primary", "displayName": "Deep Survey Blue", "canonical": "#164b6c", "tonalRamp": ["oklch(15% 0.078 240.6)","oklch(28% 0.078 240.6)","oklch(41% 0.078 240.6)","oklch(54% 0.078 240.6)","oklch(67% 0.078 240.6)","oklch(80% 0.078 240.6)","oklch(90% 0.078 240.6)","oklch(95% 0.078 240.6)"] },
+      "utility": { "role": "secondary", "displayName": "Utility Orange", "canonical": "#bf571f", "tonalRamp": ["oklch(15% 0.149 45.0)","oklch(28% 0.149 45.0)","oklch(41% 0.149 45.0)","oklch(54% 0.149 45.0)","oklch(67% 0.149 45.0)","oklch(80% 0.149 45.0)","oklch(90% 0.149 45.0)","oklch(95% 0.149 45.0)"] },
+      "garden": { "role": "tertiary", "displayName": "Garden Green", "canonical": "#4c7654", "tonalRamp": ["oklch(15% 0.071 149.4)","oklch(28% 0.071 149.4)","oklch(41% 0.071 149.4)","oklch(54% 0.071 149.4)","oklch(67% 0.071 149.4)","oklch(80% 0.071 149.4)","oklch(90% 0.071 149.4)","oklch(95% 0.071 149.4)"] },
+      "danger": { "role": "tertiary", "displayName": "Danger Red", "canonical": "#a53b31", "tonalRamp": ["oklch(15% 0.142 28.5)","oklch(28% 0.142 28.5)","oklch(41% 0.142 28.5)","oklch(54% 0.142 28.5)","oklch(67% 0.142 28.5)","oklch(80% 0.142 28.5)","oklch(90% 0.142 28.5)","oklch(95% 0.142 28.5)"] },
+      "floor-dark": { "role": "neutral", "displayName": "Dark Floor", "canonical": "#091a27", "tonalRamp": ["oklch(15% 0.035 243.6)","oklch(28% 0.035 243.6)","oklch(41% 0.035 243.6)","oklch(54% 0.035 243.6)","oklch(67% 0.035 243.6)","oklch(80% 0.035 243.6)","oklch(90% 0.035 243.6)","oklch(95% 0.035 243.6)"] },
+      "ink-dark": { "role": "neutral", "displayName": "Dark Theme Ink", "canonical": "#e5eff0", "tonalRamp": ["oklch(15% 0.011 204.1)","oklch(28% 0.011 204.1)","oklch(41% 0.011 204.1)","oklch(54% 0.011 204.1)","oklch(67% 0.011 204.1)","oklch(80% 0.011 204.1)","oklch(90% 0.011 204.1)","oklch(95% 0.011 204.1)"] },
+      "ink-muted-dark": { "role": "neutral", "displayName": "Dark Theme Muted Ink", "canonical": "#9aafb6", "tonalRamp": ["oklch(15% 0.025 219.8)","oklch(28% 0.025 219.8)","oklch(41% 0.025 219.8)","oklch(54% 0.025 219.8)","oklch(67% 0.025 219.8)","oklch(80% 0.025 219.8)","oklch(90% 0.025 219.8)","oklch(95% 0.025 219.8)"] },
+      "mylar-dark": { "role": "neutral", "displayName": "Blueprint Mylar", "canonical": "#132a3c", "tonalRamp": ["oklch(15% 0.044 244.0)","oklch(28% 0.044 244.0)","oklch(41% 0.044 244.0)","oklch(54% 0.044 244.0)","oklch(67% 0.044 244.0)","oklch(80% 0.044 244.0)","oklch(90% 0.044 244.0)","oklch(95% 0.044 244.0)"] },
+      "mylar-deep-dark": { "role": "neutral", "displayName": "Deep Blueprint Mylar", "canonical": "#0d2233", "tonalRamp": ["oklch(15% 0.042 245.2)","oklch(28% 0.042 245.2)","oklch(41% 0.042 245.2)","oklch(54% 0.042 245.2)","oklch(67% 0.042 245.2)","oklch(80% 0.042 245.2)","oklch(90% 0.042 245.2)","oklch(95% 0.042 245.2)"] },
+      "rule-dark": { "role": "neutral", "displayName": "Dark Theme Rule", "canonical": "#385266", "tonalRamp": ["oklch(15% 0.046 242.2)","oklch(28% 0.046 242.2)","oklch(41% 0.046 242.2)","oklch(54% 0.046 242.2)","oklch(67% 0.046 242.2)","oklch(80% 0.046 242.2)","oklch(90% 0.046 242.2)","oklch(95% 0.046 242.2)"] },
+      "rule-strong-dark": { "role": "neutral", "displayName": "Dark Theme Strong Rule", "canonical": "#627d8d", "tonalRamp": ["oklch(15% 0.040 234.4)","oklch(28% 0.040 234.4)","oklch(41% 0.040 234.4)","oklch(54% 0.040 234.4)","oklch(67% 0.040 234.4)","oklch(80% 0.040 234.4)","oklch(90% 0.040 234.4)","oklch(95% 0.040 234.4)"] },
+      "survey-dark": { "role": "primary", "displayName": "Dark Theme Survey Blue", "canonical": "#6db4dc", "tonalRamp": ["oklch(15% 0.092 234.6)","oklch(28% 0.092 234.6)","oklch(41% 0.092 234.6)","oklch(54% 0.092 234.6)","oklch(67% 0.092 234.6)","oklch(80% 0.092 234.6)","oklch(90% 0.092 234.6)","oklch(95% 0.092 234.6)"] },
+      "survey-deep-dark": { "role": "primary", "displayName": "Dark Theme Deep Survey", "canonical": "#8bc8e8", "tonalRamp": ["oklch(15% 0.077 231.8)","oklch(28% 0.077 231.8)","oklch(41% 0.077 231.8)","oklch(54% 0.077 231.8)","oklch(67% 0.077 231.8)","oklch(80% 0.077 231.8)","oklch(90% 0.077 231.8)","oklch(95% 0.077 231.8)"] },
+      "utility-dark": { "role": "secondary", "displayName": "Dark Theme Utility Orange", "canonical": "#f18a4d", "tonalRamp": ["oklch(15% 0.147 49.5)","oklch(28% 0.147 49.5)","oklch(41% 0.147 49.5)","oklch(54% 0.147 49.5)","oklch(67% 0.147 49.5)","oklch(80% 0.147 49.5)","oklch(90% 0.147 49.5)","oklch(95% 0.147 49.5)"] },
+      "garden-dark": { "role": "tertiary", "displayName": "Dark Theme Garden Green", "canonical": "#79aa81", "tonalRamp": ["oklch(15% 0.079 149.0)","oklch(28% 0.079 149.0)","oklch(41% 0.079 149.0)","oklch(54% 0.079 149.0)","oklch(67% 0.079 149.0)","oklch(80% 0.079 149.0)","oklch(90% 0.079 149.0)","oklch(95% 0.079 149.0)"] },
+      "danger-dark": { "role": "tertiary", "displayName": "Dark Theme Danger Red", "canonical": "#f48678", "tonalRamp": ["oklch(15% 0.137 28.4)","oklch(28% 0.137 28.4)","oklch(41% 0.137 28.4)","oklch(54% 0.137 28.4)","oklch(67% 0.137 28.4)","oklch(80% 0.137 28.4)","oklch(90% 0.137 28.4)","oklch(95% 0.137 28.4)"] },
+      "white": { "role": "neutral", "displayName": "Action White", "canonical": "#ffffff", "tonalRamp": ["oklch(15% 0.000 89.9)","oklch(28% 0.000 89.9)","oklch(41% 0.000 89.9)","oklch(54% 0.000 89.9)","oklch(67% 0.000 89.9)","oklch(80% 0.000 89.9)","oklch(90% 0.000 89.9)","oklch(95% 0.000 89.9)"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Field Title", "purpose": "Page titles and primary first-run statements." },
+      "headline": { "displayName": "Field Headline", "purpose": "Large statements within the working field." },
+      "title": { "displayName": "Ledger Title", "purpose": "Ledger, rail, and dialog headings." },
+      "body": { "displayName": "Record Body", "purpose": "Descriptions, controls, and records." },
+      "label": { "displayName": "Folio Label", "purpose": "Uppercase labels and table headings." },
+      "metadata": { "displayName": "Coordinate Metadata", "purpose": "Coordinates, counts, and build data only." }
+    },
+    "shadows": [
+      { "name": "paper-lift", "value": "5px 9px 20px rgb(27 45 54 / 10%)", "purpose": "Light-theme ledger and attention sheets." },
+      { "name": "paper-lift-dark", "value": "5px 9px 22px rgb(1 9 15 / 35%)", "purpose": "Dark-theme ledger and attention sheets." },
+      { "name": "action-lift", "value": "3px 5px 12px rgb(22 75 108 / 18%)", "purpose": "Primary actions only." },
+      { "name": "dialog-lift", "value": "12px 18px 45px rgb(7 25 37 / 28%)", "purpose": "Modal record entry above its backdrop." }
+    ],
+    "motion": [
+      { "name": "survey-loading", "value": "1.2s ease-out infinite", "purpose": "Directional loading sweep; reduced-motion collapses it to 0.01ms and one iteration." }
+    ],
+    "breakpoints": [
+      { "name": "compact-desktop", "value": "1040px" },
+      { "name": "mobile-shell", "value": "780px" },
+      { "name": "record-rows", "value": "600px" },
+      { "name": "stacked-actions", "value": "460px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Clipped survey-blue action for recording or advancing work.",
+      "html": "<button class=\"ds-button-primary\">Record entry</button>",
+      "css": ".ds-button-primary { min-height: 42px; padding: 0 15px; border: 1px solid var(--survey-deep); background: var(--survey-deep); color: white; font: 650 1rem Aptos, \"Segoe UI\", system-ui, sans-serif; cursor: pointer; clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); box-shadow: 3px 5px 12px rgb(22 75 108 / 18%); } .ds-button-primary:hover { background: #0f3c59; } .ds-button-primary:focus-visible { outline: 3px solid color-mix(in srgb, var(--survey) 65%, white); outline-offset: 3px; } @media (prefers-color-scheme: dark) { .ds-button-primary { background: #b9e1f3; border-color: #b9e1f3; color: #092236; } .ds-button-primary:hover { background: white; } }"
+    },
+    {
+      "name": "Quiet Button",
+      "kind": "button",
+      "refersTo": "button-quiet",
+      "description": "Secondary action retaining the clipped fieldbook outline.",
+      "html": "<button class=\"ds-button-quiet\">Cancel</button>",
+      "css": ".ds-button-quiet { min-height: 42px; padding: 0 15px; border: 1px solid var(--rule-strong); background: transparent; color: var(--ink); font: 650 1rem Aptos, \"Segoe UI\", system-ui, sans-serif; cursor: pointer; clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); } .ds-button-quiet:hover { background: white; border-color: var(--ink); } .ds-button-quiet:focus-visible { outline: 3px solid color-mix(in srgb, var(--survey) 65%, white); outline-offset: 3px; }"
+    },
+    {
+      "name": "Record Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Square strong-rule field for household record data.",
+      "html": "<label class=\"ds-field\"><span>Item name <b>*</b></span><input value=\"Boiler\" /></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; color: var(--ink-muted); font: 700 .75rem Aptos, \"Segoe UI\", system-ui, sans-serif; } .ds-field span { color: var(--ink); } .ds-field b { color: var(--utility); } .ds-field input { min-height: 42px; padding: 9px 10px; color: var(--ink); background: color-mix(in srgb, var(--mylar) 80%, white); border: 1px solid var(--rule-strong); border-radius: 0; font: 400 1rem Aptos, \"Segoe UI\", system-ui, sans-serif; } .ds-field input:hover { border-color: var(--ink); } .ds-field input:focus-visible { border-color: var(--survey); outline: 3px solid color-mix(in srgb, var(--survey) 65%, white); outline-offset: 3px; }"
+    },
+    {
+      "name": "Ledger Tabs",
+      "kind": "nav",
+      "description": "Scrollable rule-separated ledger index with ink reversal for the current page.",
+      "html": "<nav class=\"ds-ledger-tabs\"><button aria-current=\"page\">Service ledger</button><button>Warranties</button><button>Costs</button></nav>",
+      "css": ".ds-ledger-tabs { display: flex; overflow-x: auto; border-bottom: 1px solid var(--rule-strong); } .ds-ledger-tabs button { min-height: 48px; padding: 0 17px; white-space: nowrap; border: 0; border-right: 1px solid var(--rule); background: color-mix(in srgb, var(--mylar-deep) 65%, transparent); color: var(--ink-muted); font: 400 1rem Aptos, \"Segoe UI\", system-ui, sans-serif; cursor: pointer; } .ds-ledger-tabs button:hover { color: var(--ink); background: white; } .ds-ledger-tabs button[aria-current=\"page\"] { background: var(--ink); color: var(--mylar); } .ds-ledger-tabs button:focus-visible { outline: 3px solid color-mix(in srgb, var(--survey) 65%, white); outline-offset: -3px; }"
+    },
+    {
+      "name": "Ledger Sheet",
+      "kind": "card",
+      "refersTo": "ledger-sheet",
+      "description": "Ruled working sheet for a domain's current records.",
+      "html": "<section class=\"ds-ledger\"><header><div><h2>Service ledger</h2><span>Current ledger</span></div><small>12 entries</small></header><p>Property records continue below this ruled heading.</p></section>",
+      "css": ".ds-ledger { background: color-mix(in srgb, var(--mylar) 94%, white); color: var(--ink); border: 1px solid var(--rule-strong); box-shadow: var(--paper-shadow); clip-path: polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 0 100%); font-family: Aptos, \"Segoe UI\", system-ui, sans-serif; } .ds-ledger header { min-height: 82px; padding: 17px 21px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--rule-strong); } .ds-ledger h2 { margin: 0; font: 650 1.42rem \"Barlow Condensed\", \"Arial Narrow\", sans-serif; } .ds-ledger header span { color: var(--survey-deep); font: 700 .66rem \"SFMono-Regular\", Consolas, monospace; letter-spacing: .09em; text-transform: uppercase; } .ds-ledger small { padding: 7px 10px; border: 1px solid var(--rule); color: var(--ink-muted); } .ds-ledger p { margin: 0; padding: 17px 21px; color: var(--ink-muted); }"
+    },
+    {
+      "name": "Site Legend Entry",
+      "kind": "nav",
+      "description": "Coordinate-led desktop navigation entry with clipped active state.",
+      "html": "<a class=\"ds-site-entry active\" href=\"#\"><span>T–00</span><strong>Today</strong></a>",
+      "css": ".ds-site-entry { min-height: 47px; padding: 0 10px; display: grid; grid-template-columns: 37px 1fr; align-items: center; gap: 8px; color: #c7d2d2; background: #172a3b; border: 1px solid transparent; text-decoration: none; font-family: Aptos, \"Segoe UI\", system-ui, sans-serif; } .ds-site-entry > span { color: #82a2ae; font: 400 .62rem \"SFMono-Regular\", Consolas, monospace; } .ds-site-entry:hover { color: white; background: #203b50; } .ds-site-entry.active { color: white; background: #203b50; border-color: #456478; clip-path: polygon(0 0, 96% 0, 100% 20%, 100% 100%, 0 100%); } .ds-site-entry:focus-visible { outline: 3px solid color-mix(in srgb, var(--survey) 65%, white); outline-offset: 3px; }"
+    },
+    {
+      "name": "Status Mark",
+      "kind": "custom",
+      "description": "Text-backed semantic state with a compact rectangular color mark.",
+      "html": "<span class=\"ds-status ds-status-complete\">Completed</span>",
+      "css": ".ds-status { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); font-family: Aptos, \"Segoe UI\", system-ui, sans-serif; text-transform: capitalize; } .ds-status::before { content: \"\"; width: 7px; height: 7px; background: var(--survey); } .ds-status-complete::before { background: var(--garden); } .ds-status-open::before { background: var(--utility); } .ds-status-cancelled::before { background: var(--ink-muted); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Property Fieldbook",
+    "overview": "Hearth-v2 treats the household as a mapped working record. Pale drafting mylar, blueprint ink, survey structure, folio coordinates, clipped sheets, and ruled ledgers make the interface feel precise and physical without becoming nostalgic or decorative.\n\nCurrent work occupies the open field while navigation, evidence, and capture tools stay at the perimeter. Density is compact but legible: strong headings orient, one-pixel rules organize, and semantic color marks attention or truth rather than decorating containers.",
+    "keyCharacteristics": [
+      "Ruled fieldbook surfaces rather than a card grid",
+      "Survey-blue structure with sparse utility-orange and garden-green meaning",
+      "Square controls and clipped upper-right corners",
+      "Fixed desktop legend; sticky mast and bottom index on phones",
+      "Light drafting-mylar and dark blueprint-ink themes selected by the operating system"
+    ],
+    "rules": [
+      { "name": "The Semantic Mark Rule", "body": "Survey blue structures; utility orange demands attention; garden green confirms truth. Pair every color mark with text, position, or shape.", "section": "colors" },
+      { "name": "The Mylar Reversal Rule", "body": "Theme changes reverse the material from pale mylar to blueprint ink without changing hierarchy or meaning.", "section": "colors" },
+      { "name": "The Coordinate Reserve Rule", "body": "Monospace belongs to coordinates and machine-like metadata, never ordinary prose or major headings.", "section": "typography" },
+      { "name": "The Ruled Before Raised Rule", "body": "Establish hierarchy with ink, tonal layers, and one-pixel boundaries before adding a shadow.", "section": "elevation" },
+      { "name": "The One Cut Rule", "body": "Clip only the upper-right corner; do not mix radii, pills, or multiple ornamental cuts into the fieldbook silhouette.", "section": "shapes" }
+    ],
+    "dos": [
+      "Do use one-pixel rules and tonal layering as the default structure.",
+      "Do keep folio coordinates functional and pair semantic color with readable status text.",
+      "Do preserve the fixed-legend-to-bottom-index responsive transformation.",
+      "Do honor reduced-motion preferences; loading survey motion collapses to effectively static."
+    ],
+    "donts": [
+      "Don't turn records into a generic floating-card grid.",
+      "Don't use pills, soft rounded cards, gradients as decoration, or ornamental corner variation.",
+      "Don't use utility orange or garden green as broad surface fills when a compact mark communicates the state.",
+      "Don't use monospace for ordinary body copy or Barlow Condensed for form controls."
+    ]
+  }
+}
