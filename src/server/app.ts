@@ -23,15 +23,36 @@ export function createApp(config: AppConfig, db: HearthDatabase, providers: Prov
   const version = Object.freeze({
     version: config.BUILD_VERSION,
     source_sha: config.SOURCE_SHA,
-    build_time: config.BUILD_TIME
+    build_time: config.BUILD_TIME,
+    build_id: config.BUILD_ID
   });
-  app.get("/version.json", (_req, res) => res.json(version));
-  app.get("/api/version", (_req, res) => res.json(version));
-  app.get("/api/live", (_req, res) => res.json({ status: "live" }));
+  const instanceId = process.env.WEBSITE_INSTANCE_ID ?? `pid-${process.pid}`;
+  const operational = (_req: express.Request, res: express.Response, next: express.NextFunction) => {
+    res.set("cache-control", "no-store");
+    next();
+  };
+  app.get("/auth-config.json", operational, (_req, res) => res.json({
+    enabled: config.entraConfigured,
+    authority: config.ENTRA_TENANT_ID
+      ? `https://login.microsoftonline.com/${config.ENTRA_TENANT_ID}`
+      : null,
+    client_id: config.ENTRA_CLIENT_ID ?? null,
+    scope: config.ENTRA_API_SCOPE ?? null
+  }));
+  app.get("/version.json", operational, (_req, res) => res.json(version));
+  app.get("/api/version", operational, (_req, res) => res.json(version));
+  app.get("/api/live", operational, (_req, res) => res.json({
+    status: "live",
+    ...version,
+    instance_id: instanceId
+  }));
   app.get("/api/ready", (_req, res) => {
-    const database = checkDatabase(db);
+    res.set("cache-control", "no-store");
+    const database = checkDatabase(db, config);
     res.status(database.ok ? 200 : 503).json({
       status: database.ok ? "ready" : "not_ready",
+      ...version,
+      instance_id: instanceId,
       checks: { database },
       optional_providers: providers.configuration
     });

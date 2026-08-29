@@ -10,6 +10,27 @@ afterEach(() => {
 });
 
 describe("household domain routes", () => {
+  it("reports immutable build and durable database readiness details", async () => {
+    const context = createTestContext("readiness");
+    contexts.push(context);
+    const live = await request(context.app).get("/api/live");
+    const ready = await request(context.app).get("/api/ready");
+    expect(live.status).toBe(200);
+    expect(live.body).toMatchObject({ status: "live", source_sha: "test-sha", build_id: "local" });
+    expect(ready.status).toBe(200);
+    expect(ready.body).toMatchObject({
+      status: "ready",
+      source_sha: "test-sha",
+      checks: {
+        database: {
+          ok: true,
+          pragmas: { journal_mode: "delete", foreign_keys: true },
+          schema: { migration_version: 1, expected_migration_version: 1 }
+        }
+      }
+    });
+  });
+
   it("returns structured validation errors", async () => {
     const context = createTestContext("validation");
     contexts.push(context);

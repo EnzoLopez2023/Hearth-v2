@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { DefaultAzureCredential } from "@azure/identity";
 import { BlobServiceClient } from "@azure/storage-blob";
 import type { AppConfig } from "../config.js";
 
@@ -131,8 +132,8 @@ export class LocalBlobProvider implements BlobProvider {
 export class AzureBlobProvider implements BlobProvider {
   readonly name = "azure";
   private readonly container;
-  constructor(connectionString: string, container: string) {
-    this.container = BlobServiceClient.fromConnectionString(connectionString).getContainerClient(container);
+  constructor(client: BlobServiceClient, container: string) {
+    this.container = client.getContainerClient(container);
   }
   async put(key: string, bytes: Uint8Array): Promise<ProviderResult<{ key: string; byteSize: number; sha256: string }>> {
     try {
@@ -161,9 +162,12 @@ export function createProviders(config: AppConfig) {
     : new UnconfiguredWeatherProvider();
   let blob: BlobProvider = new UnconfiguredBlobProvider();
   let blobStatus = "not_configured";
-  if (config.BLOB_PROVIDER === "azure" && config.AZURE_STORAGE_CONNECTION_STRING) {
+  if (config.BLOB_PROVIDER === "azure" && (config.AZURE_STORAGE_ACCOUNT_URL || config.AZURE_STORAGE_CONNECTION_STRING)) {
     try {
-      blob = new AzureBlobProvider(config.AZURE_STORAGE_CONNECTION_STRING, config.AZURE_STORAGE_CONTAINER);
+      const client = config.AZURE_STORAGE_ACCOUNT_URL
+        ? new BlobServiceClient(config.AZURE_STORAGE_ACCOUNT_URL, new DefaultAzureCredential())
+        : BlobServiceClient.fromConnectionString(config.AZURE_STORAGE_CONNECTION_STRING!);
+      blob = new AzureBlobProvider(client, config.AZURE_STORAGE_CONTAINER);
       blobStatus = blob.name;
     } catch {
       blobStatus = "configuration_error";

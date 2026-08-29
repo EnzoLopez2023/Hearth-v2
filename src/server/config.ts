@@ -10,11 +10,16 @@ const envSchema = z.object({
   OIDC_ISSUER: z.string().url().optional(),
   OIDC_AUDIENCE: z.string().min(1).optional(),
   OIDC_JWKS_URI: z.string().url().optional(),
+  ENTRA_TENANT_ID: z.string().uuid().optional(),
+  ENTRA_CLIENT_ID: z.string().uuid().optional(),
+  ENTRA_API_SCOPE: z.string().min(1).optional(),
   BUILD_VERSION: z.string().default("dev"),
   SOURCE_SHA: z.string().default("unknown"),
   BUILD_TIME: z.string().default("unknown"),
+  BUILD_ID: z.string().default("local"),
   BLOB_PROVIDER: z.enum(["local", "azure"]).optional(),
   LOCAL_BLOB_PATH: z.string().default("storage/blobs"),
+  AZURE_STORAGE_ACCOUNT_URL: z.string().url().optional(),
   AZURE_STORAGE_CONNECTION_STRING: z.string().optional(),
   AZURE_OPENAI_ENDPOINT: z.string().url().optional(),
   AZURE_OPENAI_DEPLOYMENT: z.string().min(1).optional(),
@@ -36,12 +41,18 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env) {
     throw new Error("DEV_AUTH_ENABLED is forbidden in production");
   }
   const oidcConfigured = Boolean(env.OIDC_ISSUER && env.OIDC_AUDIENCE && env.OIDC_JWKS_URI);
+  const entraConfigured = Boolean(env.ENTRA_TENANT_ID && env.ENTRA_CLIENT_ID && env.ENTRA_API_SCOPE);
+  const dbPath = env.DB_PATH ?? (production ? "/home/data/hearth-v2.db" : "hearth-v2.db");
+  if (production && !path.resolve(dbPath).startsWith("/home/data/")) {
+    throw new Error("Production DB_PATH must use the persistent /home/data volume");
+  }
   return {
     ...env,
     production,
     devAuthEnabled,
     oidcConfigured,
-    dbPath: env.DB_PATH ?? (production ? "/home/data/hearth-v2.db" : "hearth-v2.db"),
+    entraConfigured,
+    dbPath,
     localBlobPath: path.resolve(env.LOCAL_BLOB_PATH)
   } as const;
 }
