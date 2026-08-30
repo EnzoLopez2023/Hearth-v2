@@ -21,6 +21,12 @@ export interface WeatherProvider {
 export interface BlobProvider {
   readonly name: string;
   put(key: string, bytes: Uint8Array): Promise<ProviderResult<{ key: string; byteSize: number; sha256: string }>>;
+  create(key: string, bytes: Uint8Array): Promise<ProviderResult<{
+    key: string;
+    byteSize: number;
+    sha256: string;
+    created: boolean;
+  }>>;
   get(key: string): Promise<ProviderResult<Uint8Array>>;
   delete(key: string): Promise<ProviderResult<void>>;
 }
@@ -100,6 +106,7 @@ export class OpenWeatherProvider implements WeatherProvider {
 export class UnconfiguredBlobProvider implements BlobProvider {
   readonly name = "unconfigured";
   async put(_key: string, _bytes: Uint8Array) { return notConfigured("blob"); }
+  async create(_key: string, _bytes: Uint8Array) { return notConfigured("blob"); }
   async get(_key: string) { return notConfigured("blob"); }
   async delete(_key: string) { return notConfigured("blob"); }
 }
@@ -118,6 +125,26 @@ export class LocalBlobProvider implements BlobProvider {
     await fs.mkdir(path.dirname(target), { recursive: true });
     await fs.writeFile(target, bytes, { flag: "wx" });
     return { status: "ok", value: { key, byteSize: bytes.byteLength, sha256: createHash("sha256").update(bytes).digest("hex") } } as const;
+  }
+  async create(key: string, bytes: Uint8Array) {
+    const target = this.resolve(key);
+    await fs.mkdir(path.dirname(target), { recursive: true });
+    let created = true;
+    try {
+      await fs.writeFile(target, bytes, { flag: "wx" });
+    } catch (error) {
+      if (!(error && typeof error === "object" && "code" in error && error.code === "EEXIST")) throw error;
+      created = false;
+    }
+    return {
+      status: "ok",
+      value: {
+        key,
+        byteSize: bytes.byteLength,
+        sha256: createHash("sha256").update(bytes).digest("hex"),
+        created
+      }
+    } as const;
   }
   async get(key: string) {
     try { return { status: "ok", value: await fs.readFile(this.resolve(key)) } as const; }
@@ -142,6 +169,34 @@ export class AzureBlobProvider implements BlobProvider {
         key, byteSize: bytes.byteLength, sha256: createHash("sha256").update(bytes).digest("hex")
       } };
     } catch { return { status: "error", provider: this.name, message: "Blob upload failed" }; }
+  }
+  async create(key: string, bytes: Uint8Array): Promise<ProviderResult<{
+    key: string;
+    byteSize: number;
+    sha256: string;
+    created: boolean;
+  }>> {
+    try {
+      await this.container.getBlockBlobClient(key).uploadData(bytes, { conditions: { ifNoneMatch: "*" } });
+      return { status: "ok", value: {
+        key,
+        byteSize: bytes.byteLength,
+        sha256: createHash("sha256").update(bytes).digest("hex"),
+        created: true
+      } };
+    } catch (error) {
+      const statusCode = error && typeof error === "object" && "statusCode" in error ? error.statusCode : undefined;
+      const code = error && typeof error === "object" && "code" in error ? error.code : undefined;
+      if (statusCode === 409 || statusCode === 412 || code === "BlobAlreadyExists") {
+        return { status: "ok", value: {
+          key,
+          byteSize: bytes.byteLength,
+          sha256: createHash("sha256").update(bytes).digest("hex"),
+          created: false
+        } };
+      }
+      return { status: "error", provider: this.name, message: "Blob upload failed" };
+    }
   }
   async get(key: string): Promise<ProviderResult<Uint8Array>> {
     try { return { status: "ok", value: await this.container.getBlockBlobClient(key).downloadToBuffer() }; }

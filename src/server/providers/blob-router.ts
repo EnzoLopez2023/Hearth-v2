@@ -54,8 +54,10 @@ export function createBlobRouter(db: HearthDatabase, provider: BlobProvider): Ro
       UNION ALL SELECT 1 FROM maintenance_photos WHERE blob_id=?
       UNION ALL SELECT 1 FROM inventory_item_images WHERE blob_id=?
       UNION ALL SELECT 1 FROM warranties WHERE blob_id=?
+      UNION ALL SELECT 1 FROM legacy_identifier_map
+        WHERE target_table='blob_metadata' AND target_id=? AND identifier_kind='attachment'
       LIMIT 1
-    `).get(req.params.id, req.params.id, req.params.id, req.params.id);
+    `).get(req.params.id, req.params.id, req.params.id, req.params.id, req.params.id);
     if (referenced) throw new HttpError(409, "blob_in_use", "Blob is referenced by a record");
     const result = await provider.delete(row.blob_key);
     if (result.status === "not_configured") throw new HttpError(503, "blob_not_configured", result.message);

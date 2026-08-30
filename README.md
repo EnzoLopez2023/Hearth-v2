@@ -89,9 +89,9 @@ npm run legacy:import -- \
   --namespace approved-snapshot-2026-08
 ```
 
-The importer opens the source read-only with `query_only=ON`, recognizes only Hearth-v2-owned tables, applies explicit field mappings, preserves stable source IDs, canonicalizes and hashes every source table, records counts/hashes in reconciliation tables, and commits the entire import in one transaction. An exact restart is a no-op. Changed snapshots, identifier collisions, schema drift, missing required fields, or any row failure abort the whole import.
+The importer opens the source read-only with `query_only=ON`, recognizes only Hearth-v2-owned tables, applies explicit field mappings, preserves stable source IDs, canonicalizes and hashes every source table, records counts/hashes in reconciliation tables, and commits the entire import in one transaction. Embedded recipe, maintenance, inventory, and pool-report files are staged through the configured durable blob provider with deterministic identities and verified by readback before database rows are committed. An exact restart verifies both reconciliation evidence and stored blobs before returning a no-op. Changed snapshots, identifier collisions, schema drift, missing required fields, or any row failure abort the whole import.
 
-Sources containing embedded PDFs, image rows, image paths/URLs, or warranty documents are refused rather than partially reconciled. Those attachments must first pass through a configured durable blob migration adapter; production image authority is never imported into the container filesystem.
+External image URLs, filesystem paths, warranty documents, and receipt paths are refused because they are not contained in the SQLite snapshot. Production blob authority is never imported into the container filesystem.
 
 All fixtures are synthetic. This repository contains no production or personal data.
 

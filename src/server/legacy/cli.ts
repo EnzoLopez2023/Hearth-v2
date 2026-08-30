@@ -1,6 +1,7 @@
 import { parseArgs } from "node:util";
 import { loadConfig } from "../config.js";
 import { openDatabase } from "../db/database.js";
+import { createProviders } from "../providers/index.js";
 import { importLegacyDatabase } from "./importer.js";
 
 const { values } = parseArgs({
@@ -18,10 +19,12 @@ if (!values.source || !values.household) {
   const config = loadConfig();
   const db = openDatabase(config);
   try {
-    const result = importLegacyDatabase({
+    const providers = createProviders(config);
+    const result = await importLegacyDatabase({
       target: db,
       sourcePath: values.source,
       householdId: values.household,
+      blobProvider: providers.blob,
       ...(values.namespace ? { sourceNamespace: values.namespace } : {})
     });
     console.log(JSON.stringify(result));
