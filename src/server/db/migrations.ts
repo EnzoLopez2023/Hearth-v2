@@ -149,5 +149,37 @@ CREATE INDEX garden_tasks_household_due ON garden_tasks(household_id, due_on, st
 CREATE INDEX yard_tasks_household_due ON yard_tasks(household_id, due_on, status);
 CREATE INDEX legacy_map_lookup ON legacy_identifier_map(household_id, target_table, target_id);
 `
+  },
+  {
+    version: 2,
+    name: "restore-recipe-manager-fields",
+    sql: `
+ALTER TABLE recipes ADD COLUMN cuisine_type TEXT;
+ALTER TABLE recipes ADD COLUMN meal_type TEXT NOT NULL DEFAULT 'dinner';
+ALTER TABLE recipes ADD COLUMN total_minutes INTEGER;
+ALTER TABLE recipes ADD COLUMN difficulty_level TEXT NOT NULL DEFAULT 'medium';
+ALTER TABLE recipes ADD COLUMN notes TEXT;
+ALTER TABLE recipes ADD COLUMN source_url TEXT;
+ALTER TABLE recipes ADD COLUMN is_favorite INTEGER NOT NULL DEFAULT 0 CHECK(is_favorite IN (0,1));
+ALTER TABLE recipes ADD COLUMN rating REAL;
+ALTER TABLE recipes ADD COLUMN parsed_by_ai INTEGER NOT NULL DEFAULT 0 CHECK(parsed_by_ai IN (0,1));
+ALTER TABLE recipes ADD COLUMN ai_suggestions TEXT;
+ALTER TABLE recipes ADD COLUMN nutrition_json TEXT;
+ALTER TABLE recipe_ingredients ADD COLUMN notes TEXT;
+ALTER TABLE legacy_imports ADD COLUMN mapping_version INTEGER NOT NULL DEFAULT 1;
+
+UPDATE recipes
+SET tags_json = CASE
+  WHEN json_valid(tags_json) = 0 THEN json_array(tags_json)
+  WHEN json_type(tags_json) <> 'array' THEN json_array(tags_json)
+  ELSE tags_json
+END
+WHERE tags_json IS NOT NULL;
+
+CREATE INDEX recipes_household_created ON recipes(household_id, created_at DESC);
+CREATE INDEX recipes_household_meal_type ON recipes(household_id, meal_type);
+CREATE INDEX recipes_household_favorite ON recipes(household_id, is_favorite);
+CREATE INDEX recipe_ingredients_recipe_position ON recipe_ingredients(recipe_id, position);
+`
   }
 ];

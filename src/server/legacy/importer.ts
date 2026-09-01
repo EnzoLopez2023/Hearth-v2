@@ -6,6 +6,7 @@ import type { BlobProvider } from "../providers/index.js";
 
 type SourceRow = Record<string, unknown>;
 type Transform = (row: SourceRow) => unknown;
+const legacyMappingVersion = 2;
 
 interface TableMapping {
   target: string;
@@ -53,11 +54,34 @@ const normalizedStatus = (fallback: string, map: Record<string, string>): Transf
 };
 const cents = (column: string): Transform => (row) =>
   row[column] === null || row[column] === undefined ? null : Math.round(Number(row[column]) * 100);
+const positiveNumberValue = (...candidates: string[]): Transform => (row) => {
+  const raw = value(...candidates)(row);
+  if (raw === null || raw === undefined || raw === "") return null;
+  const number = Number(raw);
+  if (!Number.isFinite(number)) throw new Error(`Invalid legacy number ${String(raw)}`);
+  return number > 0 ? number : null;
+};
 const fahrenheitToCelsius = (celsius: string, fahrenheit: string): Transform => (row) => {
   if (row[celsius] !== null && row[celsius] !== undefined) return row[celsius];
   return row[fahrenheit] === null || row[fahrenheit] === undefined ? null : (Number(row[fahrenheit]) - 32) * 5 / 9;
 };
 const jsonRow = (row: SourceRow) => JSON.stringify(normalize(row));
+const jsonValue = (...candidates: string[]): Transform => (row) => {
+  const raw = value(...candidates)(row);
+  if (raw === null || raw === undefined || raw === "") return null;
+  try {
+    return JSON.stringify(normalize(typeof raw === "string" ? JSON.parse(raw) : raw));
+  } catch {
+    throw new Error(`Legacy JSON field ${candidates.join("/")} is invalid`);
+  }
+};
+const booleanInteger = (...candidates: string[]): Transform => (row) => {
+  const raw = value(...candidates)(row);
+  if (raw === null || raw === undefined || raw === "") return 0;
+  if (raw === true || raw === 1 || raw === "1" || String(raw).toLowerCase() === "true") return 1;
+  if (raw === false || raw === 0 || raw === "0" || String(raw).toLowerCase() === "false") return 0;
+  throw new Error(`Legacy boolean field ${candidates.join("/")} is invalid`);
+};
 const yardProfile = (column: string, profileKey: string): Transform => (row) => {
   if (row[column] !== null && row[column] !== undefined) return row[column];
   if (!row.profile_json) return null;
@@ -75,10 +99,15 @@ export const legacyMappings: Record<string, TableMapping> = {
   recipes: { target: "recipes", fields: {
     name: ["name", "title"], description: ["description"], instructions: ["instructions"], servings: ["servings"],
     prep_minutes: ["prep_minutes", "prep_time_minutes"], cook_minutes: ["cook_minutes", "cook_time_minutes"],
-    tags_json: ["tags_json", "dietary_tags"]
-  }, required: ["name"] },
+    total_minutes: positiveNumberValue("total_minutes", "total_time_minutes"), cuisine_type: ["cuisine_type"],
+    meal_type: ["meal_type"], difficulty_level: ["difficulty_level"], notes: ["notes"],
+    source_url: ["source_url"], is_favorite: booleanInteger("is_favorite"), rating: ["rating"],
+    parsed_by_ai: booleanInteger("parsed_by_ai"), ai_suggestions: ["ai_suggestions"],
+    tags_json: jsonValue("tags_json", "dietary_tags"), nutrition_json: jsonValue("nutrition_json", "nutrition")
+  }, defaults: { meal_type: "dinner", difficulty_level: "medium" }, required: ["name"] },
   recipe_ingredients: { target: "recipe_ingredients", fields: {
-    recipe_id: ["recipe_id"], name: ["name", "ingredient_name"], quantity: ["quantity"], unit: ["unit"], position: ["position"]
+    recipe_id: ["recipe_id"], name: ["name", "ingredient_name"], quantity: ["quantity"],
+    unit: ["unit"], notes: ["notes"], position: ["position"]
   }, defaults: { position: 0 }, required: ["recipe_id", "name"] },
   home_items: { target: "home_items", fields: {
     name: ["name"], description: ["description"], manufacturer: ["manufacturer"], model: ["model", "model_number"],
@@ -251,6 +280,127 @@ interface MappedRow {
   data: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
+}
+
+function mapLegacyRows(
+  table: string,
+  mapping: TableMapping,
+  rows: SourceRow[],
+  reportsWithHandwrittenRecommendations: ReadonlySet<string> = new Set()
+): MappedRow[] {
+  return rows.map((sourceRow) => {
+    const id = sourceId(mapping, table, sourceRow);
+    const data: Record<string, unknown> = {};
+    for (const [targetColumn, spec] of Object.entries(mapping.fields)) {
+      data[targetColumn] = mappedValue(spec, sourceRow);
+    }
+    for (const [targetColumn, fallback] of Object.entries(mapping.defaults ?? {})) {
+      if (data[targetColumn] === null || data[targetColumn] === undefined) {
+        data[targetColumn] = typeof fallback === "function" ? fallback(sourceRow) : fallback;
+      }
+    }
+    for (const [targetColumn, item] of Object.entries(data)) {
+      if (targetColumn.endsWith("_id") && item !== null && item !== undefined) {
+        data[targetColumn] = String(item);
+      }
+    }
+    if (table === "pool_report_recommendations"
+      && !sourceRow.completed_at
+      && String(sourceRow.source).toLowerCase() === "computer"
+      && reportsWithHandwrittenRecommendations.has(String(sourceRow.report_id))) {
+      data.status = "dismissed";
+    }
+    for (const required of mapping.required ?? []) {
+      if (data[required] === null || data[required] === undefined || data[required] === "") {
+        throw new Error(`Legacy ${table} row ${id} is missing required mapped field ${required}`);
+      }
+    }
+    const createdAt = normalizeTimestamp(sourceRow.created_at ?? sourceRow.uploaded_at ?? sourceRow.generated_at ?? epoch);
+    const updatedAt = normalizeTimestamp(sourceRow.updated_at ?? createdAt);
+    return { id, data, createdAt, updatedAt };
+  });
+}
+
+function upgradeLegacyRecipeFields(
+  target: HearthDatabase,
+  householdId: string,
+  importId: string,
+  snapshots: Record<string, { rows: SourceRow[]; count: number; hash: string }>
+): void {
+  const recipes = mapLegacyRows("recipes", legacyMappings.recipes!, snapshots.recipes?.rows ?? []);
+  const ingredients = mapLegacyRows(
+    "recipe_ingredients",
+    legacyMappings.recipe_ingredients!,
+    snapshots.recipe_ingredients?.rows ?? []
+  );
+  target.transaction(() => {
+    for (const row of recipes) {
+      const current = target.prepare(`
+        SELECT cuisine_type,meal_type,total_minutes,difficulty_level,notes,source_url,is_favorite,
+          rating,parsed_by_ai,ai_suggestions,nutrition_json
+        FROM recipes WHERE id=? AND household_id=?
+      `).get(row.id, householdId) as {
+        cuisine_type: string | null;
+        meal_type: string;
+        total_minutes: number | null;
+        difficulty_level: string;
+        notes: string | null;
+        source_url: string | null;
+        is_favorite: number;
+        rating: number | null;
+        parsed_by_ai: number;
+        ai_suggestions: string | null;
+        nutrition_json: string | null;
+      } | undefined;
+      if (!current) throw new Error(`Legacy mapping upgrade conflict: recipe ${row.id} is missing`);
+      const untouched = current.cuisine_type === null
+        && current.meal_type === "dinner"
+        && current.total_minutes === null
+        && current.difficulty_level === "medium"
+        && current.notes === null
+        && current.source_url === null
+        && current.is_favorite === 0
+        && current.rating === null
+        && current.parsed_by_ai === 0
+        && current.ai_suggestions === null
+        && current.nutrition_json === null;
+      if (!untouched) {
+        throw new Error(`Legacy mapping upgrade conflict: recipe ${row.id} has newer field changes`);
+      }
+      target.prepare(`
+        UPDATE recipes SET cuisine_type=?,meal_type=?,total_minutes=?,difficulty_level=?,notes=?,
+          source_url=?,is_favorite=?,rating=?,parsed_by_ai=?,ai_suggestions=?,nutrition_json=?
+        WHERE id=? AND household_id=?
+      `).run(
+        row.data.cuisine_type ?? null,
+        row.data.meal_type ?? "dinner",
+        row.data.total_minutes ?? null,
+        row.data.difficulty_level ?? "medium",
+        row.data.notes ?? null,
+        row.data.source_url ?? null,
+        row.data.is_favorite ?? 0,
+        row.data.rating ?? null,
+        row.data.parsed_by_ai ?? 0,
+        row.data.ai_suggestions ?? null,
+        row.data.nutrition_json ?? null,
+        row.id,
+        householdId
+      );
+    }
+    for (const row of ingredients) {
+      const current = target.prepare(`
+        SELECT notes FROM recipe_ingredients WHERE id=? AND household_id=?
+      `).get(row.id, householdId) as { notes: string | null } | undefined;
+      if (!current) throw new Error(`Legacy mapping upgrade conflict: recipe ingredient ${row.id} is missing`);
+      if (current.notes !== null) {
+        throw new Error(`Legacy mapping upgrade conflict: recipe ingredient ${row.id} has newer field changes`);
+      }
+      target.prepare("UPDATE recipe_ingredients SET notes=? WHERE id=? AND household_id=?")
+        .run(row.data.notes ?? null, row.id, householdId);
+    }
+    target.prepare("UPDATE legacy_imports SET mapping_version=? WHERE id=? AND household_id=?")
+      .run(legacyMappingVersion, importId, householdId);
+  })();
 }
 
 interface AttachmentPlan {
@@ -567,7 +717,7 @@ async function verifyImportedAttachments(
 }
 
 export interface LegacyImportResult {
-  status: "imported" | "no_op";
+  status: "imported" | "upgraded" | "no_op";
   importId: string;
   sourceNamespace: string;
   tables: Record<string, { count: number; hash: string }>;
@@ -621,8 +771,12 @@ export async function importLegacyDatabase(options: {
     }
     const sourceFingerprint = hash(JSON.stringify(Object.entries(snapshots).map(([table, item]) => [table, item.count, item.hash])));
     const existing = options.target.prepare(`
-      SELECT id,source_fingerprint FROM legacy_imports WHERE household_id=? AND source_namespace=?
-    `).get(options.householdId, sourceNamespace) as { id: string; source_fingerprint: string } | undefined;
+      SELECT id,source_fingerprint,mapping_version FROM legacy_imports WHERE household_id=? AND source_namespace=?
+    `).get(options.householdId, sourceNamespace) as {
+      id: string;
+      source_fingerprint: string;
+      mapping_version: number;
+    } | undefined;
     if (existing) {
       const reconciled = options.target.prepare(`
         SELECT source_table,row_count,canonical_hash FROM legacy_reconciliation WHERE import_id=? ORDER BY source_table
@@ -641,6 +795,17 @@ export async function importLegacyDatabase(options: {
           sourceNamespace
         );
       }
+      if (existing.mapping_version > legacyMappingVersion) {
+        throw new Error("Legacy import conflict: target mapping is newer than this importer");
+      }
+      if (existing.mapping_version < legacyMappingVersion) {
+        upgradeLegacyRecipeFields(options.target, options.householdId, existing.id, snapshots);
+        return {
+          status: "upgraded", importId: existing.id, sourceNamespace,
+          tables: Object.fromEntries(Object.entries(snapshots).map(([table, item]) => [table, { count: item.count, hash: item.hash }])),
+          attachments: attachmentSummary
+        };
+      }
       return {
         status: "no_op", importId: existing.id, sourceNamespace,
         tables: Object.fromEntries(Object.entries(snapshots).map(([table, item]) => [table, { count: item.count, hash: item.hash }])),
@@ -658,38 +823,12 @@ export async function importLegacyDatabase(options: {
     const mappedRows: Record<string, MappedRow[]> = {};
     for (const [table, mapping] of Object.entries(legacyMappings)) {
       const rows = snapshots[table]?.rows ?? [];
-      mappedRows[table] = rows.map((sourceRow) => {
-        const id = sourceId(mapping, table, sourceRow);
-        if (options.target.prepare(`SELECT 1 FROM ${mapping.target} WHERE id=?`).get(id)) {
-          throw new Error(`Legacy import conflict: ${mapping.target} id ${id} already exists`);
+      mappedRows[table] = mapLegacyRows(table, mapping, rows, reportsWithHandwrittenRecommendations);
+      for (const row of mappedRows[table]) {
+        if (options.target.prepare(`SELECT 1 FROM ${mapping.target} WHERE id=?`).get(row.id)) {
+          throw new Error(`Legacy import conflict: ${mapping.target} id ${row.id} already exists`);
         }
-        const data: Record<string, unknown> = {};
-        for (const [targetColumn, spec] of Object.entries(mapping.fields)) data[targetColumn] = mappedValue(spec, sourceRow);
-        for (const [targetColumn, fallback] of Object.entries(mapping.defaults ?? {})) {
-          if (data[targetColumn] === null || data[targetColumn] === undefined) {
-            data[targetColumn] = typeof fallback === "function" ? fallback(sourceRow) : fallback;
-          }
-        }
-        for (const [targetColumn, item] of Object.entries(data)) {
-          if (targetColumn.endsWith("_id") && item !== null && item !== undefined) {
-            data[targetColumn] = String(item);
-          }
-        }
-        if (table === "pool_report_recommendations"
-          && !sourceRow.completed_at
-          && String(sourceRow.source).toLowerCase() === "computer"
-          && reportsWithHandwrittenRecommendations.has(String(sourceRow.report_id))) {
-          data.status = "dismissed";
-        }
-        for (const required of mapping.required ?? []) {
-          if (data[required] === null || data[required] === undefined || data[required] === "") {
-            throw new Error(`Legacy ${table} row ${id} is missing required mapped field ${required}`);
-          }
-        }
-        const createdAt = normalizeTimestamp(sourceRow.created_at ?? sourceRow.uploaded_at ?? sourceRow.generated_at ?? epoch);
-        const updatedAt = normalizeTimestamp(sourceRow.updated_at ?? createdAt);
-        return { id, data, createdAt, updatedAt };
-      });
+      }
     }
     for (const plan of attachmentPlans) {
       if (options.target.prepare("SELECT 1 FROM blob_metadata WHERE id=?")
@@ -722,8 +861,10 @@ export async function importLegacyDatabase(options: {
             sourceIdValue, targetTable, targetId, kind, now);
         };
         options.target.prepare(`
-          INSERT INTO legacy_imports(id,household_id,source_namespace,source_fingerprint,imported_at) VALUES(?,?,?,?,?)
-        `).run(importId, options.householdId, sourceNamespace, sourceFingerprint, now);
+          INSERT INTO legacy_imports(
+            id,household_id,source_namespace,source_fingerprint,mapping_version,imported_at
+          ) VALUES(?,?,?,?,?,?)
+        `).run(importId, options.householdId, sourceNamespace, sourceFingerprint, legacyMappingVersion, now);
         for (const attachment of storedAttachments) {
           options.target.prepare(`
             INSERT INTO blob_metadata

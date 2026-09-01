@@ -16,16 +16,16 @@ describe("database foundation", () => {
     expect(context.db.pragma("foreign_keys", { simple: true })).toBe(1);
     expect(context.db.pragma("journal_mode", { simple: true })).toBe("delete");
     expect(context.db.pragma("synchronous", { simple: true })).toBe(1);
-    expect(context.db.prepare("SELECT version FROM schema_migrations").pluck().all()).toEqual([1]);
+    expect(context.db.prepare("SELECT version FROM schema_migrations").pluck().all()).toEqual([1, 2]);
     const readiness = checkDatabase(context.db, context.config);
     expect(readiness).toMatchObject({
       ok: true,
       pragmas: { journal_mode: "delete", synchronous: "normal", foreign_keys: true },
       integrity: { quick_check: "ok", foreign_key_violations: 0 },
       schema: {
-        migration_version: 1,
-        migration_name: "initial-normalized-schema",
-        expected_migration_version: 1
+        migration_version: 2,
+        migration_name: "restore-recipe-manager-fields",
+        expected_migration_version: 2
       }
     });
   });
@@ -42,5 +42,23 @@ describe("database foundation", () => {
       garden_harvests garden_settings garden_shopping
     `.trim().split(/\s+/);
     for (const table of expected) expect(names.has(table), table).toBe(true);
+  });
+
+  it("preserves the complete legacy recipe record", () => {
+    const context = createTestContext("recipe-schema");
+    contexts.push(context);
+    const recipeColumns = new Set(
+      (context.db.prepare("PRAGMA table_info(recipes)").all() as Array<{ name: string }>).map((column) => column.name)
+    );
+    const ingredientColumns = new Set(
+      (context.db.prepare("PRAGMA table_info(recipe_ingredients)").all() as Array<{ name: string }>).map((column) => column.name)
+    );
+    for (const column of [
+      "cuisine_type", "meal_type", "total_minutes", "difficulty_level", "notes", "source_url",
+      "is_favorite", "rating", "parsed_by_ai", "ai_suggestions", "nutrition_json"
+    ]) {
+      expect(recipeColumns.has(column), column).toBe(true);
+    }
+    expect(ingredientColumns.has("notes")).toBe(true);
   });
 });

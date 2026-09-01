@@ -72,8 +72,46 @@ describe("legacy importer", () => {
     const sourcePath = sourceFile("legacy-source");
     const source = new Database(sourcePath);
     source.exec(`
-      CREATE TABLE recipes(id INTEGER PRIMARY KEY,title TEXT NOT NULL,description TEXT,created_at TEXT,updated_at TEXT);
-      INSERT INTO recipes VALUES(42,'Soup','A dependable soup','2020-01-01','2020-01-02');
+      CREATE TABLE recipes(
+        id INTEGER PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT,
+        cuisine_type TEXT,
+        meal_type TEXT,
+        prep_time_minutes INTEGER,
+        cook_time_minutes INTEGER,
+        total_time_minutes INTEGER,
+        servings INTEGER,
+        difficulty_level TEXT,
+        instructions TEXT,
+        notes TEXT,
+        source_url TEXT,
+        is_favorite INTEGER,
+        rating REAL,
+        dietary_tags TEXT,
+        parsed_by_ai INTEGER,
+        ai_suggestions TEXT,
+        nutrition TEXT,
+        created_at TEXT,
+        updated_at TEXT
+      );
+      INSERT INTO recipes VALUES(
+        42,'Soup','A dependable soup','American','dinner',10,35,0,6,'easy',
+        'Roast, blend, and serve.','Double the garlic.','https://example.com/soup',1,4.5,
+        '["comfort","soup"]',1,'Use garden tomatoes.',
+        '{"calories":220,"protein_g":7,"carbs_g":24,"fat_g":11,"fiber_g":5,"sugar_g":12,"sodium_mg":480}',
+        '2020-01-01','2020-01-02'
+      );
+      CREATE TABLE recipe_ingredients(
+        id INTEGER PRIMARY KEY,
+        recipe_id INTEGER,
+        ingredient_name TEXT,
+        quantity REAL,
+        unit TEXT,
+        notes TEXT,
+        position INTEGER
+      );
+      INSERT INTO recipe_ingredients VALUES(8,42,'Tomatoes',8,'whole','halved',0);
       CREATE TABLE home_items(id INTEGER PRIMARY KEY,name TEXT NOT NULL,qr_identifier TEXT,created_at TEXT,updated_at TEXT);
       INSERT INTO home_items VALUES(77,'Boiler','HEARTH-LEGACY-77','2020-01-01','2020-01-02');
     `);
@@ -83,15 +121,55 @@ describe("legacy importer", () => {
       target: context.db, sourcePath, householdId: "hsh_dev_hearth", sourceNamespace: "fixture:v1"
     };
     const first = await importLegacyDatabase(options);
+    context.db.prepare(`
+      UPDATE recipes SET cuisine_type=NULL,meal_type='dinner',total_minutes=NULL,
+        difficulty_level='medium',notes=NULL,source_url=NULL,is_favorite=0,rating=NULL,
+        parsed_by_ai=0,ai_suggestions=NULL,nutrition_json=NULL
+    `).run();
+    context.db.prepare("UPDATE recipe_ingredients SET notes=NULL").run();
+    context.db.prepare("UPDATE legacy_imports SET mapping_version=1 WHERE id=?").run(first.importId);
+    const upgraded = await importLegacyDatabase(options);
     const second = await importLegacyDatabase(options);
     expect(first.status).toBe("imported");
+    expect(upgraded.status).toBe("upgraded");
+    expect(upgraded.importId).toBe(first.importId);
     expect(second.status).toBe("no_op");
     expect(second.importId).toBe(first.importId);
-    expect(context.db.prepare("SELECT id,name FROM recipes").get()).toEqual({ id: "42", name: "Soup" });
+    expect(context.db.prepare("SELECT mapping_version FROM legacy_imports WHERE id=?").pluck().get(first.importId)).toBe(2);
+    expect(context.db.prepare(`
+      SELECT id,name,cuisine_type,meal_type,total_minutes,difficulty_level,notes,source_url,
+        is_favorite,rating,parsed_by_ai,ai_suggestions,tags_json
+      FROM recipes
+    `).get()).toEqual({
+      id: "42",
+      name: "Soup",
+      cuisine_type: "American",
+      meal_type: "dinner",
+      total_minutes: null,
+      difficulty_level: "easy",
+      notes: "Double the garlic.",
+      source_url: "https://example.com/soup",
+      is_favorite: 1,
+      rating: 4.5,
+      parsed_by_ai: 1,
+      ai_suggestions: "Use garden tomatoes.",
+      tags_json: '["comfort","soup"]'
+    });
+    expect(JSON.parse(context.db.prepare("SELECT nutrition_json FROM recipes").pluck().get() as string)).toEqual({
+      calories: 220,
+      protein_g: 7,
+      carbs_g: 24,
+      fat_g: 11,
+      fiber_g: 5,
+      sugar_g: 12,
+      sodium_mg: 480
+    });
+    expect(context.db.prepare("SELECT name,quantity,unit,notes,position FROM recipe_ingredients").get())
+      .toEqual({ name: "Tomatoes", quantity: 8, unit: "whole", notes: "halved", position: 0 });
     expect(context.db.prepare("SELECT source_id,target_id FROM legacy_identifier_map WHERE source_table='home_items'").get())
       .toEqual({ source_id: "77", target_id: "77" });
     expect(context.db.prepare("SELECT COUNT(*) count FROM legacy_reconciliation WHERE import_id=?").get(first.importId))
-      .toEqual({ count: 2 });
+      .toEqual({ count: 3 });
 
     const changed = new Database(sourcePath);
     changed.prepare("UPDATE recipes SET description='Changed' WHERE id=42").run();

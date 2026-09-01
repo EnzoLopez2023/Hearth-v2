@@ -25,7 +25,7 @@ describe("household domain routes", () => {
         database: {
           ok: true,
           pragmas: { journal_mode: "delete", foreign_keys: true },
-          schema: { migration_version: 1, expected_migration_version: 1 }
+          schema: { migration_version: 2, expected_migration_version: 2 }
         }
       }
     });
@@ -38,6 +38,136 @@ describe("household domain routes", () => {
     expect(response.status).toBe(400);
     expect(response.body.error.code).toBe("validation_error");
     expect(response.body.error.request_id).toBeTruthy();
+  });
+
+  it("creates and revises complete recipes with ordered ingredients", async () => {
+    const context = createTestContext("recipe-collection");
+    contexts.push(context);
+    const recipeInput = {
+      name: "Roasted tomato soup",
+      description: "A dependable weeknight soup.",
+      cuisine_type: "American",
+      meal_type: "dinner",
+      prep_minutes: 15,
+      cook_minutes: 40,
+      servings: 6,
+      difficulty_level: "easy",
+      instructions: "1. Roast the tomatoes.\n2. Blend until smooth.",
+      notes: "Double the garlic.",
+      source_url: "https://example.com/tomato-soup",
+      tags: ["weeknight", "soup"],
+      is_favorite: true,
+      rating: 4.5,
+      nutrition: {
+        calories: 220,
+        protein_g: 7,
+        carbs_g: 24,
+        fat_g: 11,
+        fiber_g: 5,
+        sugar_g: 12,
+        sodium_mg: 480
+      },
+      ingredients: [
+        { name: "Roma tomatoes", quantity: 8, unit: "whole", notes: "halved" },
+        { name: "Garlic", quantity: 4, unit: "cloves", notes: "peeled" }
+      ]
+    };
+    const created = await request(context.app)
+      .post("/api/recipes/collection")
+      .set("Idempotency-Key", "create-soup")
+      .send(recipeInput);
+
+    expect(created.status).toBe(201);
+    expect(created.body.data).toMatchObject({
+      name: "Roasted tomato soup",
+      total_minutes: 55,
+      is_favorite: true,
+      ingredient_count: 2,
+      tags: ["weeknight", "soup"]
+    });
+    expect(created.body.data.ingredients.map((ingredient: { name: string; position: number }) => ({
+      name: ingredient.name,
+      position: ingredient.position
+    }))).toEqual([
+      { name: "Roma tomatoes", position: 0 },
+      { name: "Garlic", position: 1 }
+    ]);
+    const firstIngredientId = created.body.data.ingredients[0].id as string;
+
+    const id = created.body.data.id as string;
+    const listed = await request(context.app).get("/api/recipes/collection");
+    expect(listed.status).toBe(200);
+    expect(listed.body.data[0]).toMatchObject({
+      id,
+      cuisine_type: "American",
+      meal_type: "dinner",
+      difficulty_level: "easy",
+      ingredient_count: 2
+    });
+
+    const genericPatch = await request(context.app)
+      .patch(`/api/recipes/recipes/${id}`)
+      .set("Idempotency-Key", "describe-soup")
+      .send({ description: "A revised weeknight soup." });
+    expect(genericPatch.status).toBe(200);
+    expect(genericPatch.body.data).toMatchObject({
+      meal_type: "dinner",
+      difficulty_level: "easy",
+      is_favorite: 1
+    });
+
+    const updated = await request(context.app)
+      .put(`/api/recipes/collection/${id}`)
+      .set("Idempotency-Key", "revise-soup")
+      .send({
+        ...recipeInput,
+        name: "Fire-roasted tomato soup",
+        ingredients: [{ id: firstIngredientId, name: "Tomatoes", quantity: 8, unit: "whole", notes: "fire-roasted" }]
+      });
+    expect(updated.status).toBe(200);
+    expect(updated.body.data).toMatchObject({ name: "Fire-roasted tomato soup", ingredient_count: 1 });
+    expect(updated.body.data.ingredients[0]).toMatchObject({
+      id: firstIngredientId,
+      name: "Tomatoes",
+      notes: "fire-roasted",
+      position: 0
+    });
+    expect(context.db.prepare("SELECT COUNT(*) count FROM recipe_ingredients WHERE recipe_id=?").get(id))
+      .toEqual({ count: 1 });
+
+    const favorite = await request(context.app)
+      .patch(`/api/recipes/collection/${id}/favorite`)
+      .set("Idempotency-Key", "unfavorite-soup")
+      .send({ is_favorite: false });
+    expect(favorite.status).toBe(200);
+    expect(favorite.body.data.is_favorite).toBe(false);
+
+    const minimal = await request(context.app)
+      .post("/api/recipes/collection")
+      .set("Idempotency-Key", "create-toast")
+      .send({ name: "Toast", ingredients: [] });
+    expect(minimal.status).toBe(201);
+    expect(minimal.body.data).toMatchObject({
+      name: "Toast",
+      meal_type: "dinner",
+      difficulty_level: "medium",
+      nutrition: null
+    });
+    const minimalId = minimal.body.data.id as string;
+    const deleted = await request(context.app)
+      .delete(`/api/recipes/collection/${minimalId}`)
+      .set("Idempotency-Key", "delete-toast");
+    const replayedDelete = await request(context.app)
+      .delete(`/api/recipes/collection/${minimalId}`)
+      .set("Idempotency-Key", "delete-toast");
+    expect(deleted.status).toBe(204);
+    expect(replayedDelete.status).toBe(204);
+    expect(replayedDelete.headers["idempotency-replayed"]).toBe("true");
+
+    const malformed = await request(context.app)
+      .post("/api/recipes/recipes")
+      .send({ name: "Unreadable", tags_json: "not-json" });
+    expect(malformed.status).toBe(400);
   });
 
   it("enforces ownership for records and parent references", async () => {

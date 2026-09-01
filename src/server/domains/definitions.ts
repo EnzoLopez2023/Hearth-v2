@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { nutritionSchema, storedJsonSchema, tagsSchema } from "./recipe-data.js";
 
 export interface ReferenceDefinition {
   field: string;
@@ -24,6 +25,7 @@ const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const nullableDate = date.nullable().optional();
 const nonnegative = z.number().nonnegative();
 const positive = z.number().positive();
+const zeroOrOne = z.union([z.literal(0), z.literal(1)]);
 
 function resource(
   path: string,
@@ -33,7 +35,12 @@ function resource(
   options: Pick<ResourceDefinition, "references" | "orderBy"> = {}
 ): ResourceDefinition {
   const create = z.strictObject(schema);
-  return { path, table, idPrefix, create, update: create.partial(), ...options };
+  const updateShape: Record<string, z.ZodType> = {};
+  for (const [key, field] of Object.entries(schema) as Array<[string, z.ZodType]>) {
+    const withoutDefault = field instanceof z.ZodDefault ? field.removeDefault() : field;
+    updateShape[key] = z.optional(withoutDefault);
+  }
+  return { path, table, idPrefix, create, update: z.strictObject(updateShape), ...options };
 }
 
 export const domainResources: Record<string, ResourceDefinition[]> = {
@@ -172,11 +179,20 @@ export const domainResources: Record<string, ResourceDefinition[]> = {
       servings: z.number().int().positive().nullable().optional(),
       prep_minutes: z.number().int().nonnegative().nullable().optional(),
       cook_minutes: z.number().int().nonnegative().nullable().optional(),
-      tags_json: z.string().max(10_000).nullable().optional()
-    }, { orderBy: "name COLLATE NOCASE" }),
+      total_minutes: z.number().int().nonnegative().nullable().optional(),
+      cuisine_type: optionalText,
+      meal_type: z.enum(["breakfast", "lunch", "dinner", "snack", "dessert", "appetizer"]).default("dinner"),
+      difficulty_level: z.enum(["easy", "medium", "hard"]).default("medium"),
+      notes: optionalText, source_url: z.string().trim().url().max(2_048).nullable().optional(),
+      is_favorite: zeroOrOne.default(0), rating: z.number().min(0).max(5).nullable().optional(),
+      parsed_by_ai: zeroOrOne.default(0), ai_suggestions: optionalText,
+      tags_json: storedJsonSchema(tagsSchema, 10_000).nullable().optional(),
+      nutrition_json: storedJsonSchema(nutritionSchema, 100_000).nullable().optional()
+    }, { orderBy: "created_at DESC" }),
     resource("ingredients", "recipe_ingredients", "rin", {
       recipe_id: id, name: text, quantity: positive.nullable().optional(),
-      unit: z.string().trim().max(50).nullable().optional(), position: z.number().int().nonnegative().default(0)
+      unit: z.string().trim().max(50).nullable().optional(), notes: optionalText,
+      position: z.number().int().nonnegative().default(0)
     }, { references: [{ field: "recipe_id", table: "recipes" }], orderBy: "recipe_id, position" }),
     resource("images", "recipe_images", "rim", {
       recipe_id: id, blob_id: id, alt_text: optionalText, position: z.number().int().nonnegative().default(0)

@@ -6,7 +6,7 @@ export interface HeroStat {
 }
 
 interface PageHeroProps {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
   accentPhrase?: string | undefined;
   subtitle: ReactNode;
@@ -54,7 +54,7 @@ export function PageHero({
       <section className="page-hero pool-hero">
         <span className="pool-caustics" aria-hidden="true" />
         <div className="pool-hero-copy">
-          <span className="pool-eyebrow">{eyebrow}</span>
+          {eyebrow && <span className="pool-eyebrow">{eyebrow}</span>}
           <h1>{title}</h1>
           <p>{subtitle}</p>
           {actions && <div className="pool-hero-actions">{actions}</div>}
@@ -78,7 +78,7 @@ export function PageHero({
       <Embers />
       <div className="page-hero-row">
         <div className="page-hero-copy">
-          <span className="hero-eyebrow"><i aria-hidden="true" />{eyebrow}</span>
+          {eyebrow && <span className="hero-eyebrow"><i aria-hidden="true" />{eyebrow}</span>}
           <h1>
             {titleSegments(title, accentPhrase).map((segment, index) => (
               segment.accent

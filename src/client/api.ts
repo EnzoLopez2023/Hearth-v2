@@ -21,7 +21,7 @@ export class ApiError extends Error {
   }
 }
 
-export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
+async function apiResponse(path: string, options: RequestInit): Promise<Response> {
   const token = path.startsWith("/api/") ? await accessToken() : undefined;
   const response = await fetch(path, {
     ...options,
@@ -31,22 +31,31 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
       ...options.headers
     }
   });
-  if (!response.ok) {
-    let body: ApiErrorBody = {};
-    try {
-      body = await response.json() as ApiErrorBody;
-    } catch {
-      // Intermediaries can return non-JSON failures; status remains actionable.
-    }
-    throw new ApiError(
-      body.error?.message ?? `Request failed with status ${response.status}`,
-      response.status,
-      body.error?.code ?? "request_failed",
-      body.error?.request_id
-    );
+  if (response.ok) return response;
+
+  let body: ApiErrorBody = {};
+  try {
+    body = await response.json() as ApiErrorBody;
+  } catch {
+    // Intermediaries can return non-JSON failures; status remains actionable.
   }
+  throw new ApiError(
+    body.error?.message ?? `Request failed with status ${response.status}`,
+    response.status,
+    body.error?.code ?? "request_failed",
+    body.error?.request_id
+  );
+}
+
+export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const response = await apiResponse(path, options);
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
+}
+
+export async function apiBlob(path: string): Promise<Blob> {
+  const response = await apiResponse(path, {});
+  return response.blob();
 }
 
 export function apiMessage(error: unknown): string {

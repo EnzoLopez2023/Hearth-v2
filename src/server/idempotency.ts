@@ -9,7 +9,7 @@ function canonical(value: unknown): string {
     return `{${Object.entries(value as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b))
       .map(([key, item]) => `${JSON.stringify(key)}:${canonical(item)}`).join(",")}}`;
   }
-  return JSON.stringify(value);
+  return JSON.stringify(value) ?? "undefined";
 }
 
 export function idempotency(db: HearthDatabase): RequestHandler {
@@ -31,20 +31,30 @@ export function idempotency(db: HearthDatabase): RequestHandler {
         return next(new HttpError(409, "idempotency_conflict", "Idempotency-Key was used with a different request"));
       }
       res.setHeader("idempotency-replayed", "true");
+      if (existing.status_code === 204) return res.status(204).send();
       return res.status(existing.status_code).json(JSON.parse(existing.response_json));
     }
-    const original = res.json.bind(res);
+    let recorded = false;
+    const record = (body: unknown) => {
+      if (recorded || res.statusCode < 200 || res.statusCode >= 300) return;
+      db.prepare(`
+        INSERT INTO idempotency_records
+        (id,household_id,user_id,method,path,idempotency_key,request_hash,status_code,response_json,created_at)
+        VALUES(?,?,?,?,?,?,?,?,?,?)
+      `).run(randomUUID(), auth.householdId, auth.userId, req.method, requestPath, key, requestHash,
+        res.statusCode, JSON.stringify(body ?? null), new Date().toISOString());
+      recorded = true;
+    };
+    const originalJson = res.json.bind(res);
+    const originalSend = res.send.bind(res);
     res.json = ((body: unknown) => {
-      if (res.statusCode >= 200 && res.statusCode < 300) {
-        db.prepare(`
-          INSERT INTO idempotency_records
-          (id,household_id,user_id,method,path,idempotency_key,request_hash,status_code,response_json,created_at)
-          VALUES(?,?,?,?,?,?,?,?,?,?)
-        `).run(randomUUID(), auth.householdId, auth.userId, req.method, requestPath, key, requestHash,
-          res.statusCode, JSON.stringify(body), new Date().toISOString());
-      }
-      return original(body);
+      record(body);
+      return originalJson(body);
     }) as typeof res.json;
+    res.send = ((body?: unknown) => {
+      record(body);
+      return originalSend(body);
+    }) as typeof res.send;
     next();
   };
 }

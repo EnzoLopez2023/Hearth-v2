@@ -9,6 +9,7 @@ import { errorHandler, HttpError, notFound, requestContext } from "./http.js";
 import { idempotency } from "./idempotency.js";
 import { createDashboardRouter } from "./domains/dashboard.js";
 import { createDomainRouter } from "./domains/router.js";
+import { createRecipeCollectionRouter } from "./domains/recipes.js";
 import type { createProviders } from "./providers/index.js";
 import { createBlobRouter } from "./providers/blob-router.js";
 
@@ -62,6 +63,7 @@ export function createApp(config: AppConfig, db: HearthDatabase, providers: Prov
   app.use("/api", idempotency(db));
   app.use("/api/blobs", createBlobRouter(db, providers.blob));
   app.use("/api/dashboard", createDashboardRouter(db));
+  app.use("/api/recipes", createRecipeCollectionRouter(db));
   for (const domain of ["maintenance", "inventory", "yard", "garden", "pool", "recipes"] as const) {
     app.use(`/api/${domain}`, createDomainRouter(db, domain));
   }

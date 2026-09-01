@@ -3,6 +3,7 @@ import { Activity, ChevronDown, Home, Menu, Moon, Sun, X } from "lucide-react";
 import { NavLink, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { api } from "./api";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
+import { RecipeManagerPage } from "./features/recipes/RecipeManagerPage";
 import { domains } from "./features/resources/domain-config";
 import { ResourceWorkspace } from "./features/resources/ResourceWorkspace";
 
@@ -111,6 +112,7 @@ export function App() {
     <AppShell>
       <Routes>
         <Route path="/" element={<DashboardPage />} />
+        <Route path="/recipes" element={<RecipeManagerPage />} />
         <Route path="/:domain" element={<ResourceWorkspace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

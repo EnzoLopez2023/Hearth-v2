@@ -1,15 +1,11 @@
-import { randomUUID } from "node:crypto";
 import { Router } from "express";
 import type { HearthDatabase } from "../db/database.js";
 import { HttpError } from "../http.js";
 import { requireMutationRole } from "../auth.js";
 import { domainResources, type ResourceDefinition } from "./definitions.js";
+import { stableId, writeAudit } from "./shared.js";
 
 type Row = Record<string, unknown>;
-
-function stableId(prefix: string): string {
-  return `${prefix}_${randomUUID().replaceAll("-", "")}`;
-}
 
 function parse(definition: ResourceDefinition, body: unknown, update = false): Row {
   const result = (update ? definition.update : definition.create).safeParse(body);
@@ -30,21 +26,6 @@ function assertReferences(db: HearthDatabase, householdId: string, definition: R
     const found = db.prepare(`SELECT 1 FROM ${reference.table} WHERE id=? AND household_id=?`).get(value, householdId);
     if (!found) throw new HttpError(422, "invalid_reference", `${reference.field} does not belong to this household`);
   }
-}
-
-function audit(
-  db: HearthDatabase,
-  auth: NonNullable<Express.Request["auth"]>,
-  requestId: string,
-  action: string,
-  table: string,
-  entityId: string
-): void {
-  const now = new Date().toISOString();
-  db.prepare(`
-    INSERT INTO audit_log(id,household_id,user_id,action,entity_table,entity_id,request_id,created_at,updated_at)
-    VALUES(?,?,?,?,?,?,?,?,?)
-  `).run(stableId("aud"), auth.householdId, auth.userId, action, table, entityId, requestId, now, now);
 }
 
 function mountResource(router: Router, db: HearthDatabase, definition: ResourceDefinition): void {
@@ -71,7 +52,7 @@ function mountResource(router: Router, db: HearthDatabase, definition: ResourceD
       db.prepare(`INSERT INTO ${definition.table}(id,household_id,created_at,updated_at${columns.length ? `,${columns.join(",")}` : ""})
         VALUES(?,?,?,?${columns.map(() => ",?").join("")})`)
         .run(id, auth.householdId, now, now, ...columns.map((column) => data[column]));
-      audit(db, auth, req.requestId, "create", definition.table, id);
+      writeAudit(db, auth, req.requestId, "create", definition.table, id);
     })();
     const row = db.prepare(`SELECT * FROM ${definition.table} WHERE id=?`).get(id);
     res.status(201).json({ data: row });
@@ -85,7 +66,7 @@ function mountResource(router: Router, db: HearthDatabase, definition: ResourceD
       const updated = db.prepare(`UPDATE ${definition.table} SET ${columns.map((column) => `${column}=?`).join(",")},updated_at=?
         WHERE id=? AND household_id=?`)
         .run(...columns.map((column) => data[column]), new Date().toISOString(), req.params.id, auth.householdId);
-      if (updated.changes) audit(db, auth, req.requestId, "update", definition.table, String(req.params.id));
+      if (updated.changes) writeAudit(db, auth, req.requestId, "update", definition.table, String(req.params.id));
       return updated;
     })();
     if (!result.changes) throw new HttpError(404, "not_found", "Record not found");
@@ -96,7 +77,7 @@ function mountResource(router: Router, db: HearthDatabase, definition: ResourceD
     const result = db.transaction(() => {
       const deleted = db.prepare(`DELETE FROM ${definition.table} WHERE id=? AND household_id=?`)
         .run(req.params.id, auth.householdId);
-      if (deleted.changes) audit(db, auth, req.requestId, "delete", definition.table, String(req.params.id));
+      if (deleted.changes) writeAudit(db, auth, req.requestId, "delete", definition.table, String(req.params.id));
       return deleted;
     })();
     if (!result.changes) throw new HttpError(404, "not_found", "Record not found");

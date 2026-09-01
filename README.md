@@ -45,7 +45,7 @@ All routes except the operational endpoints require an authorized household memb
 | Yard maintenance | `/api/yard` | locations, tasks, weather |
 | Garden | `/api/garden` | fields, vegetables, beds, plantings, tasks, harvests, settings, shopping |
 | Pool maintenance | `/api/pool` | reports, readings, recommendations, chemicals, insights |
-| Recipes | `/api/recipes` | recipes, ingredients, images |
+| Recipes | `/api/recipes` | recipe collection (full metadata and ordered ingredients), recipes, ingredients, images |
 | Blobs | `/api/blobs` | authorized upload, read, and unreferenced deletion |
 | QR/stable IDs | `/api/identifiers/:identifier` | household-scoped physical identifier resolution |
 
@@ -90,6 +90,8 @@ npm run legacy:import -- \
 ```
 
 The importer opens the source read-only with `query_only=ON`, recognizes only Hearth-v2-owned tables, applies explicit field mappings, preserves stable source IDs, canonicalizes and hashes every source table, records counts/hashes in reconciliation tables, and commits the entire import in one transaction. Embedded recipe, maintenance, inventory, and pool-report files are staged through the configured durable blob provider with deterministic identities and verified by readback before database rows are committed. An exact restart verifies both reconciliation evidence and stored blobs before returning a no-op. Changed snapshots, identifier collisions, schema drift, missing required fields, or any row failure abort the whole import.
+
+Replaying an unchanged approved snapshot after a mapping upgrade fills newly supported legacy fields only when those target fields are still untouched; otherwise it refuses the upgrade rather than overwriting newer household edits.
 
 External image URLs, filesystem paths, warranty documents, and receipt paths are refused because they are not contained in the SQLite snapshot. Production blob authority is never imported into the container filesystem.
 
