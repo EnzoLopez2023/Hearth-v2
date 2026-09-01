@@ -25,6 +25,8 @@ export interface DomainConfig {
   label: string;
   coordinate: string;
   description: string;
+  heroTitle: string;
+  heroAccent?: string;
   icon: LucideIcon;
   resources: ResourceConfig[];
 }
@@ -55,6 +57,8 @@ export const domains: DomainConfig[] = [
     label: "Home maintenance",
     coordinate: "H–01",
     description: "Assets, service obligations, warranties, costs, and evidence.",
+    heroTitle: "Keep your household humming",
+    heroAccent: "household",
     icon: Wrench,
     resources: [
       {
@@ -102,6 +106,8 @@ export const domains: DomainConfig[] = [
     label: "Home inventory",
     coordinate: "H–02",
     description: "What the household owns, where it lives, and when it needs attention.",
+    heroTitle: "Everything you own",
+    heroAccent: "own",
     icon: Archive,
     resources: [
       {
@@ -138,6 +144,8 @@ export const domains: DomainConfig[] = [
     label: "Yard maintenance",
     coordinate: "P–01",
     description: "Mapped exterior areas, recurring work, and recorded weather evidence.",
+    heroTitle: "Tend your yard",
+    heroAccent: "yard",
     icon: Trees,
     resources: [
       {
@@ -175,6 +183,8 @@ export const domains: DomainConfig[] = [
     label: "Garden",
     coordinate: "P–02",
     description: "Beds, plantings, tasks, harvest evidence, and shopping needs.",
+    heroTitle: "Garden Planner",
+    heroAccent: "Planner",
     icon: Sprout,
     resources: [
       {
@@ -239,6 +249,7 @@ export const domains: DomainConfig[] = [
     label: "Pool maintenance",
     coordinate: "P–03",
     description: "Water observations, measured ranges, actions, and chemical stock.",
+    heroTitle: "Crystal-clear water, on record",
     icon: Waves,
     resources: [
       {
@@ -282,6 +293,8 @@ export const domains: DomainConfig[] = [
     label: "Recipe manager",
     coordinate: "L–01",
     description: "A practical kitchen ledger for recipes, ingredients, and repeatable preparation.",
+    heroTitle: "What you cook",
+    heroAccent: "cook",
     icon: BookOpen,
     resources: [
       {

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, FilePlus2, Pencil, Trash2, X } from "lucide-react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api, apiMessage, type ApiRow } from "../../api";
+import { PageHero } from "../../components/PageHero";
 import { getDomain, type FieldConfig, type ResourceConfig } from "./domain-config";
 
 type RelationOptions = Record<string, ApiRow[]>;
@@ -213,16 +214,22 @@ export function ResourceWorkspace() {
 
   return (
     <main className="work-field">
-      <header className="surface-heading">
-        <div>
-          <h1>{domain.label}</h1>
-          <span className="folio-label">{domain.coordinate} · Property register</span>
-          <p>{domain.description}</p>
-        </div>
-        <button className="button button-primary" onClick={() => void openEditor("new")}>
-          <FilePlus2 aria-hidden="true" /> Record {resource.singular}
-        </button>
-      </header>
+      <PageHero
+        eyebrow={domain.label}
+        title={domain.heroTitle}
+        accentPhrase={domain.heroAccent}
+        subtitle={domain.description}
+        variant={domain.slug === "pool" ? "pool" : "default"}
+        stats={domain.slug === "pool" ? [
+          { label: "current ledger", value: resource.label },
+          { label: "entries", value: state === "loading" ? "—" : rows.length }
+        ] : undefined}
+        actions={
+          <button className="button button-primary" onClick={() => void openEditor("new")}>
+            <FilePlus2 aria-hidden="true" /> Record {resource.singular}
+          </button>
+        }
+      />
 
       <nav className="ledger-tabs" aria-label={`${domain.label} ledgers`}>
         {domain.resources.map((entry) => (
@@ -236,9 +243,10 @@ export function ResourceWorkspace() {
         ))}
       </nav>
 
+      <h2 className="section-label">Current ledger</h2>
       <section className="ledger-sheet" aria-labelledby="ledger-title">
         <header className="ledger-heading">
-          <div><h2 id="ledger-title">{resource.label}</h2><span className="folio-label">Current ledger</span></div>
+          <div><h2 id="ledger-title">{resource.label}</h2><span className="ledger-subtitle">{domain.coordinate} · Household record</span></div>
           <span className="entry-count">{rows.length} {rows.length === 1 ? "entry" : "entries"}</span>
         </header>
         {state === "loading" && <div className="skeleton-ledger" aria-label="Loading ledger"><i /><i /><i /><i /></div>}

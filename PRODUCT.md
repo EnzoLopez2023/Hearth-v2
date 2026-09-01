@@ -34,11 +34,11 @@ Members use the product on desktop and mobile while planning work, inspecting pr
 
 ## Brand Commitments
 
-The product name is Hearth-v2. The supplied binding direction is “The Property Fieldbook”: precise, calm, physical, and unmistakably tied to the property without generic card-grid, nostalgic scrapbook, or faux-industrial styling.
+The product name is Hearth-v2. Its binding visual direction is the legacy Hearth “the home you keep” interface at commit `f0b05fc1dbf53e8aa26c215d8e858894a2793871`: warm editorial typography, page-specific household photography and palettes, floating translucent navigation, rounded journal surfaces, and compact pill controls. Hearth-v2 preserves that visual identity without restoring legacy-only products or changing v2 ownership boundaries.
 
 ## Evidence on Hand
 
-The legacy Hearth repository at commit `f0b05fc1dbf53e8aa26c215d8e858894a2793871` is evidence for household behavior, labels, and data semantics only. No production data, personal data, customer proof, benchmarks, or deployment evidence is available and none may be fabricated.
+The legacy Hearth repository at commit `f0b05fc1dbf53e8aa26c215d8e858894a2793871` is the visual source of truth and evidence for household behavior, labels, and data semantics. No production data, personal data, customer proof, benchmarks, or deployment evidence is available and none may be fabricated.
 
 ## Product Principles
 

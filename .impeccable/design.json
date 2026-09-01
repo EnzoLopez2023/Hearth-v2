@@ -1,57 +1,83 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-29T04:21:13.565Z",
+  "generatedAt": "2026-09-01T01:30:02.323Z",
   "title": "Design System: Hearth-v2",
   "extensions": {
     "colorMeta": {
-      "floor-light": { "role": "neutral", "displayName": "Light Floor", "canonical": "#e4e7e2", "tonalRamp": ["oklch(15% 0.007 132.4)","oklch(28% 0.007 132.4)","oklch(41% 0.007 132.4)","oklch(54% 0.007 132.4)","oklch(67% 0.007 132.4)","oklch(80% 0.007 132.4)","oklch(90% 0.007 132.4)","oklch(95% 0.007 132.4)"] },
-      "ink": { "role": "neutral", "displayName": "Blueprint Ink", "canonical": "#172a3b", "tonalRamp": ["oklch(15% 0.040 246.8)","oklch(28% 0.040 246.8)","oklch(41% 0.040 246.8)","oklch(54% 0.040 246.8)","oklch(67% 0.040 246.8)","oklch(80% 0.040 246.8)","oklch(90% 0.040 246.8)","oklch(95% 0.040 246.8)"] },
-      "ink-muted": { "role": "neutral", "displayName": "Muted Blueprint Ink", "canonical": "#53626c", "tonalRamp": ["oklch(15% 0.024 237.2)","oklch(28% 0.024 237.2)","oklch(41% 0.024 237.2)","oklch(54% 0.024 237.2)","oklch(67% 0.024 237.2)","oklch(80% 0.024 237.2)","oklch(90% 0.024 237.2)","oklch(95% 0.024 237.2)"] },
-      "mylar": { "role": "neutral", "displayName": "Drafting Mylar", "canonical": "#f3f4ee", "tonalRamp": ["oklch(15% 0.008 114.2)","oklch(28% 0.008 114.2)","oklch(41% 0.008 114.2)","oklch(54% 0.008 114.2)","oklch(67% 0.008 114.2)","oklch(80% 0.008 114.2)","oklch(90% 0.008 114.2)","oklch(95% 0.008 114.2)"] },
-      "mylar-deep": { "role": "neutral", "displayName": "Deep Drafting Mylar", "canonical": "#e7eae4", "tonalRamp": ["oklch(15% 0.009 128.6)","oklch(28% 0.009 128.6)","oklch(41% 0.009 128.6)","oklch(54% 0.009 128.6)","oklch(67% 0.009 128.6)","oklch(80% 0.009 128.6)","oklch(90% 0.009 128.6)","oklch(95% 0.009 128.6)"] },
-      "rule": { "role": "neutral", "displayName": "Rule", "canonical": "#bcc5c6", "tonalRamp": ["oklch(15% 0.010 204.9)","oklch(28% 0.010 204.9)","oklch(41% 0.010 204.9)","oklch(54% 0.010 204.9)","oklch(67% 0.010 204.9)","oklch(80% 0.010 204.9)","oklch(90% 0.010 204.9)","oklch(95% 0.010 204.9)"] },
-      "rule-strong": { "role": "neutral", "displayName": "Strong Rule", "canonical": "#7b8d94", "tonalRamp": ["oklch(15% 0.023 223.2)","oklch(28% 0.023 223.2)","oklch(41% 0.023 223.2)","oklch(54% 0.023 223.2)","oklch(67% 0.023 223.2)","oklch(80% 0.023 223.2)","oklch(90% 0.023 223.2)","oklch(95% 0.023 223.2)"] },
-      "survey": { "role": "primary", "displayName": "Survey Blue", "canonical": "#26668c", "tonalRamp": ["oklch(15% 0.089 238.6)","oklch(28% 0.089 238.6)","oklch(41% 0.089 238.6)","oklch(54% 0.089 238.6)","oklch(67% 0.089 238.6)","oklch(80% 0.089 238.6)","oklch(90% 0.089 238.6)","oklch(95% 0.089 238.6)"] },
-      "survey-deep": { "role": "primary", "displayName": "Deep Survey Blue", "canonical": "#164b6c", "tonalRamp": ["oklch(15% 0.078 240.6)","oklch(28% 0.078 240.6)","oklch(41% 0.078 240.6)","oklch(54% 0.078 240.6)","oklch(67% 0.078 240.6)","oklch(80% 0.078 240.6)","oklch(90% 0.078 240.6)","oklch(95% 0.078 240.6)"] },
-      "utility": { "role": "secondary", "displayName": "Utility Orange", "canonical": "#bf571f", "tonalRamp": ["oklch(15% 0.149 45.0)","oklch(28% 0.149 45.0)","oklch(41% 0.149 45.0)","oklch(54% 0.149 45.0)","oklch(67% 0.149 45.0)","oklch(80% 0.149 45.0)","oklch(90% 0.149 45.0)","oklch(95% 0.149 45.0)"] },
-      "garden": { "role": "tertiary", "displayName": "Garden Green", "canonical": "#4c7654", "tonalRamp": ["oklch(15% 0.071 149.4)","oklch(28% 0.071 149.4)","oklch(41% 0.071 149.4)","oklch(54% 0.071 149.4)","oklch(67% 0.071 149.4)","oklch(80% 0.071 149.4)","oklch(90% 0.071 149.4)","oklch(95% 0.071 149.4)"] },
-      "danger": { "role": "tertiary", "displayName": "Danger Red", "canonical": "#a53b31", "tonalRamp": ["oklch(15% 0.142 28.5)","oklch(28% 0.142 28.5)","oklch(41% 0.142 28.5)","oklch(54% 0.142 28.5)","oklch(67% 0.142 28.5)","oklch(80% 0.142 28.5)","oklch(90% 0.142 28.5)","oklch(95% 0.142 28.5)"] },
-      "floor-dark": { "role": "neutral", "displayName": "Dark Floor", "canonical": "#091a27", "tonalRamp": ["oklch(15% 0.035 243.6)","oklch(28% 0.035 243.6)","oklch(41% 0.035 243.6)","oklch(54% 0.035 243.6)","oklch(67% 0.035 243.6)","oklch(80% 0.035 243.6)","oklch(90% 0.035 243.6)","oklch(95% 0.035 243.6)"] },
-      "ink-dark": { "role": "neutral", "displayName": "Dark Theme Ink", "canonical": "#e5eff0", "tonalRamp": ["oklch(15% 0.011 204.1)","oklch(28% 0.011 204.1)","oklch(41% 0.011 204.1)","oklch(54% 0.011 204.1)","oklch(67% 0.011 204.1)","oklch(80% 0.011 204.1)","oklch(90% 0.011 204.1)","oklch(95% 0.011 204.1)"] },
-      "ink-muted-dark": { "role": "neutral", "displayName": "Dark Theme Muted Ink", "canonical": "#9aafb6", "tonalRamp": ["oklch(15% 0.025 219.8)","oklch(28% 0.025 219.8)","oklch(41% 0.025 219.8)","oklch(54% 0.025 219.8)","oklch(67% 0.025 219.8)","oklch(80% 0.025 219.8)","oklch(90% 0.025 219.8)","oklch(95% 0.025 219.8)"] },
-      "mylar-dark": { "role": "neutral", "displayName": "Blueprint Mylar", "canonical": "#132a3c", "tonalRamp": ["oklch(15% 0.044 244.0)","oklch(28% 0.044 244.0)","oklch(41% 0.044 244.0)","oklch(54% 0.044 244.0)","oklch(67% 0.044 244.0)","oklch(80% 0.044 244.0)","oklch(90% 0.044 244.0)","oklch(95% 0.044 244.0)"] },
-      "mylar-deep-dark": { "role": "neutral", "displayName": "Deep Blueprint Mylar", "canonical": "#0d2233", "tonalRamp": ["oklch(15% 0.042 245.2)","oklch(28% 0.042 245.2)","oklch(41% 0.042 245.2)","oklch(54% 0.042 245.2)","oklch(67% 0.042 245.2)","oklch(80% 0.042 245.2)","oklch(90% 0.042 245.2)","oklch(95% 0.042 245.2)"] },
-      "rule-dark": { "role": "neutral", "displayName": "Dark Theme Rule", "canonical": "#385266", "tonalRamp": ["oklch(15% 0.046 242.2)","oklch(28% 0.046 242.2)","oklch(41% 0.046 242.2)","oklch(54% 0.046 242.2)","oklch(67% 0.046 242.2)","oklch(80% 0.046 242.2)","oklch(90% 0.046 242.2)","oklch(95% 0.046 242.2)"] },
-      "rule-strong-dark": { "role": "neutral", "displayName": "Dark Theme Strong Rule", "canonical": "#627d8d", "tonalRamp": ["oklch(15% 0.040 234.4)","oklch(28% 0.040 234.4)","oklch(41% 0.040 234.4)","oklch(54% 0.040 234.4)","oklch(67% 0.040 234.4)","oklch(80% 0.040 234.4)","oklch(90% 0.040 234.4)","oklch(95% 0.040 234.4)"] },
-      "survey-dark": { "role": "primary", "displayName": "Dark Theme Survey Blue", "canonical": "#6db4dc", "tonalRamp": ["oklch(15% 0.092 234.6)","oklch(28% 0.092 234.6)","oklch(41% 0.092 234.6)","oklch(54% 0.092 234.6)","oklch(67% 0.092 234.6)","oklch(80% 0.092 234.6)","oklch(90% 0.092 234.6)","oklch(95% 0.092 234.6)"] },
-      "survey-deep-dark": { "role": "primary", "displayName": "Dark Theme Deep Survey", "canonical": "#8bc8e8", "tonalRamp": ["oklch(15% 0.077 231.8)","oklch(28% 0.077 231.8)","oklch(41% 0.077 231.8)","oklch(54% 0.077 231.8)","oklch(67% 0.077 231.8)","oklch(80% 0.077 231.8)","oklch(90% 0.077 231.8)","oklch(95% 0.077 231.8)"] },
-      "utility-dark": { "role": "secondary", "displayName": "Dark Theme Utility Orange", "canonical": "#f18a4d", "tonalRamp": ["oklch(15% 0.147 49.5)","oklch(28% 0.147 49.5)","oklch(41% 0.147 49.5)","oklch(54% 0.147 49.5)","oklch(67% 0.147 49.5)","oklch(80% 0.147 49.5)","oklch(90% 0.147 49.5)","oklch(95% 0.147 49.5)"] },
-      "garden-dark": { "role": "tertiary", "displayName": "Dark Theme Garden Green", "canonical": "#79aa81", "tonalRamp": ["oklch(15% 0.079 149.0)","oklch(28% 0.079 149.0)","oklch(41% 0.079 149.0)","oklch(54% 0.079 149.0)","oklch(67% 0.079 149.0)","oklch(80% 0.079 149.0)","oklch(90% 0.079 149.0)","oklch(95% 0.079 149.0)"] },
-      "danger-dark": { "role": "tertiary", "displayName": "Dark Theme Danger Red", "canonical": "#f48678", "tonalRamp": ["oklch(15% 0.137 28.4)","oklch(28% 0.137 28.4)","oklch(41% 0.137 28.4)","oklch(54% 0.137 28.4)","oklch(67% 0.137 28.4)","oklch(80% 0.137 28.4)","oklch(90% 0.137 28.4)","oklch(95% 0.137 28.4)"] },
-      "white": { "role": "neutral", "displayName": "Action White", "canonical": "#ffffff", "tonalRamp": ["oklch(15% 0.000 89.9)","oklch(28% 0.000 89.9)","oklch(41% 0.000 89.9)","oklch(54% 0.000 89.9)","oklch(67% 0.000 89.9)","oklch(80% 0.000 89.9)","oklch(90% 0.000 89.9)","oklch(95% 0.000 89.9)"] }
+      "parchment-ground": { "role": "neutral", "displayName": "Parchment Ground", "canonical": "#efe4d2", "tonalRamp": ["oklch(15% 0.027 80.2)","oklch(28% 0.027 80.2)","oklch(41% 0.027 80.2)","oklch(54% 0.027 80.2)","oklch(67% 0.027 80.2)","oklch(80% 0.027 80.2)","oklch(90% 0.027 80.2)","oklch(95% 0.027 80.2)"] },
+      "parchment-surface": { "role": "neutral", "displayName": "Parchment Surface", "canonical": "#e8dcc4", "tonalRamp": ["oklch(15% 0.035 84.6)","oklch(28% 0.035 84.6)","oklch(41% 0.035 84.6)","oklch(54% 0.035 84.6)","oklch(67% 0.035 84.6)","oklch(80% 0.035 84.6)","oklch(90% 0.035 84.6)","oklch(95% 0.035 84.6)"] },
+      "journal-paper": { "role": "neutral", "displayName": "Journal Paper", "canonical": "#fbf5e6", "tonalRamp": ["oklch(15% 0.021 88.7)","oklch(28% 0.021 88.7)","oklch(41% 0.021 88.7)","oklch(54% 0.021 88.7)","oklch(67% 0.021 88.7)","oklch(80% 0.021 88.7)","oklch(90% 0.021 88.7)","oklch(95% 0.021 88.7)"] },
+      "hearth-ink": { "role": "neutral", "displayName": "Hearth Ink", "canonical": "#2d1b26", "tonalRamp": ["oklch(15% 0.034 342.5)","oklch(28% 0.034 342.5)","oklch(41% 0.034 342.5)","oklch(54% 0.034 342.5)","oklch(67% 0.034 342.5)","oklch(80% 0.034 342.5)","oklch(90% 0.034 342.5)","oklch(95% 0.034 342.5)"] },
+      "hearth-ink-soft": { "role": "neutral", "displayName": "Soft Hearth Ink", "canonical": "#4a2f3d", "tonalRamp": ["oklch(15% 0.045 347.3)","oklch(28% 0.045 347.3)","oklch(41% 0.045 347.3)","oklch(54% 0.045 347.3)","oklch(67% 0.045 347.3)","oklch(80% 0.045 347.3)","oklch(90% 0.045 347.3)","oklch(95% 0.045 347.3)"] },
+      "hearth-muted": { "role": "neutral", "displayName": "Muted Hearth Ink", "canonical": "#6e5e40", "tonalRamp": ["oklch(15% 0.049 82.7)","oklch(28% 0.049 82.7)","oklch(41% 0.049 82.7)","oklch(54% 0.049 82.7)","oklch(67% 0.049 82.7)","oklch(80% 0.049 82.7)","oklch(90% 0.049 82.7)","oklch(95% 0.049 82.7)"] },
+      "hearth-line": { "role": "neutral", "displayName": "Parchment Line", "canonical": "#ddcba8", "tonalRamp": ["oklch(15% 0.051 83.9)","oklch(28% 0.051 83.9)","oklch(41% 0.051 83.9)","oklch(54% 0.051 83.9)","oklch(67% 0.051 83.9)","oklch(80% 0.051 83.9)","oklch(90% 0.051 83.9)","oklch(95% 0.051 83.9)"] },
+      "hearth-plum": { "role": "primary", "displayName": "Hearth Plum", "canonical": "#5c2a4a", "tonalRamp": ["oklch(15% 0.085 343.0)","oklch(28% 0.085 343.0)","oklch(41% 0.085 343.0)","oklch(54% 0.085 343.0)","oklch(67% 0.085 343.0)","oklch(80% 0.085 343.0)","oklch(90% 0.085 343.0)","oklch(95% 0.085 343.0)"] },
+      "hearth-plum-deep": { "role": "primary", "displayName": "Deep Hearth Plum", "canonical": "#3f1a33", "tonalRamp": ["oklch(15% 0.068 341.3)","oklch(28% 0.068 341.3)","oklch(41% 0.068 341.3)","oklch(54% 0.068 341.3)","oklch(67% 0.068 341.3)","oklch(80% 0.068 341.3)","oklch(90% 0.068 341.3)","oklch(95% 0.068 341.3)"] },
+      "hearth-plum-light": { "role": "primary", "displayName": "Light Hearth Plum", "canonical": "#7a3f60", "tonalRamp": ["oklch(15% 0.092 346.7)","oklch(28% 0.092 346.7)","oklch(41% 0.092 346.7)","oklch(54% 0.092 346.7)","oklch(67% 0.092 346.7)","oklch(80% 0.092 346.7)","oklch(90% 0.092 346.7)","oklch(95% 0.092 346.7)"] },
+      "antique-gold": { "role": "secondary", "displayName": "Antique Gold", "canonical": "#8a6e30", "tonalRamp": ["oklch(15% 0.087 84.8)","oklch(28% 0.087 84.8)","oklch(41% 0.087 84.8)","oklch(54% 0.087 84.8)","oklch(67% 0.087 84.8)","oklch(80% 0.087 84.8)","oklch(90% 0.087 84.8)","oklch(95% 0.087 84.8)"] },
+      "action-white": { "role": "neutral", "displayName": "Action White", "canonical": "#fff", "tonalRamp": ["oklch(15% 0.000 89.9)","oklch(28% 0.000 89.9)","oklch(41% 0.000 89.9)","oklch(54% 0.000 89.9)","oklch(67% 0.000 89.9)","oklch(80% 0.000 89.9)","oklch(90% 0.000 89.9)","oklch(95% 0.000 89.9)"] },
+      "danger-clay": { "role": "tertiary", "displayName": "Danger Clay", "canonical": "#b05945", "tonalRamp": ["oklch(15% 0.118 34.1)","oklch(28% 0.118 34.1)","oklch(41% 0.118 34.1)","oklch(54% 0.118 34.1)","oklch(67% 0.118 34.1)","oklch(80% 0.118 34.1)","oklch(90% 0.118 34.1)","oklch(95% 0.118 34.1)"] },
+      "attention-orange": { "role": "tertiary", "displayName": "Attention Orange", "canonical": "#c06f2a", "tonalRamp": ["oklch(15% 0.130 56.8)","oklch(28% 0.130 56.8)","oklch(41% 0.130 56.8)","oklch(54% 0.130 56.8)","oklch(67% 0.130 56.8)","oklch(80% 0.130 56.8)","oklch(90% 0.130 56.8)","oklch(95% 0.130 56.8)"] },
+      "complete-green": { "role": "tertiary", "displayName": "Complete Green", "canonical": "#5f8a4e", "tonalRamp": ["oklch(15% 0.099 137.3)","oklch(28% 0.099 137.3)","oklch(41% 0.099 137.3)","oklch(54% 0.099 137.3)","oklch(67% 0.099 137.3)","oklch(80% 0.099 137.3)","oklch(90% 0.099 137.3)","oklch(95% 0.099 137.3)"] },
+      "night-ground": { "role": "neutral", "displayName": "Night Ground", "canonical": "#20212a", "tonalRamp": ["oklch(15% 0.017 280.1)","oklch(28% 0.017 280.1)","oklch(41% 0.017 280.1)","oklch(54% 0.017 280.1)","oklch(67% 0.017 280.1)","oklch(80% 0.017 280.1)","oklch(90% 0.017 280.1)","oklch(95% 0.017 280.1)"] },
+      "night-surface": { "role": "neutral", "displayName": "Night Surface", "canonical": "#262732", "tonalRamp": ["oklch(15% 0.020 280.9)","oklch(28% 0.020 280.9)","oklch(41% 0.020 280.9)","oklch(54% 0.020 280.9)","oklch(67% 0.020 280.9)","oklch(80% 0.020 280.9)","oklch(90% 0.020 280.9)","oklch(95% 0.020 280.9)"] },
+      "night-paper": { "role": "neutral", "displayName": "Night Paper", "canonical": "#2e2f38", "tonalRamp": ["oklch(15% 0.016 280.4)","oklch(28% 0.016 280.4)","oklch(41% 0.016 280.4)","oklch(54% 0.016 280.4)","oklch(67% 0.016 280.4)","oklch(80% 0.016 280.4)","oklch(90% 0.016 280.4)","oklch(95% 0.016 280.4)"] },
+      "night-ink": { "role": "neutral", "displayName": "Night Ink", "canonical": "#f5efe3", "tonalRamp": ["oklch(15% 0.017 84.6)","oklch(28% 0.017 84.6)","oklch(41% 0.017 84.6)","oklch(54% 0.017 84.6)","oklch(67% 0.017 84.6)","oklch(80% 0.017 84.6)","oklch(90% 0.017 84.6)","oklch(95% 0.017 84.6)"] },
+      "night-ink-soft": { "role": "neutral", "displayName": "Soft Night Ink", "canonical": "#e0d8c8", "tonalRamp": ["oklch(15% 0.023 84.6)","oklch(28% 0.023 84.6)","oklch(41% 0.023 84.6)","oklch(54% 0.023 84.6)","oklch(67% 0.023 84.6)","oklch(80% 0.023 84.6)","oklch(90% 0.023 84.6)","oklch(95% 0.023 84.6)"] },
+      "night-muted": { "role": "neutral", "displayName": "Muted Night Ink", "canonical": "#a6a4ae", "tonalRamp": ["oklch(15% 0.014 295.2)","oklch(28% 0.014 295.2)","oklch(41% 0.014 295.2)","oklch(54% 0.014 295.2)","oklch(67% 0.014 295.2)","oklch(80% 0.014 295.2)","oklch(90% 0.014 295.2)","oklch(95% 0.014 295.2)"] },
+      "night-line": { "role": "neutral", "displayName": "Night Line", "canonical": "#3a3b45", "tonalRamp": ["oklch(15% 0.017 281.0)","oklch(28% 0.017 281.0)","oklch(41% 0.017 281.0)","oklch(54% 0.017 281.0)","oklch(67% 0.017 281.0)","oklch(80% 0.017 281.0)","oklch(90% 0.017 281.0)","oklch(95% 0.017 281.0)"] },
+      "night-plum": { "role": "primary", "displayName": "Night Plum", "canonical": "#c77aa0", "tonalRamp": ["oklch(15% 0.107 349.4)","oklch(28% 0.107 349.4)","oklch(41% 0.107 349.4)","oklch(54% 0.107 349.4)","oklch(67% 0.107 349.4)","oklch(80% 0.107 349.4)","oklch(90% 0.107 349.4)","oklch(95% 0.107 349.4)"] },
+      "night-plum-deep": { "role": "primary", "displayName": "Deep Night Plum", "canonical": "#9e5c84", "tonalRamp": ["oklch(15% 0.101 343.7)","oklch(28% 0.101 343.7)","oklch(41% 0.101 343.7)","oklch(54% 0.101 343.7)","oklch(67% 0.101 343.7)","oklch(80% 0.101 343.7)","oklch(90% 0.101 343.7)","oklch(95% 0.101 343.7)"] },
+      "night-plum-light": { "role": "primary", "displayName": "Light Night Plum", "canonical": "#dca5c4", "tonalRamp": ["oklch(15% 0.076 344.2)","oklch(28% 0.076 344.2)","oklch(41% 0.076 344.2)","oklch(54% 0.076 344.2)","oklch(67% 0.076 344.2)","oklch(80% 0.076 344.2)","oklch(90% 0.076 344.2)","oklch(95% 0.076 344.2)"] },
+      "night-gold": { "role": "secondary", "displayName": "Night Gold", "canonical": "#dcb87a", "tonalRamp": ["oklch(15% 0.090 80.5)","oklch(28% 0.090 80.5)","oklch(41% 0.090 80.5)","oklch(54% 0.090 80.5)","oklch(67% 0.090 80.5)","oklch(80% 0.090 80.5)","oklch(90% 0.090 80.5)","oklch(95% 0.090 80.5)"] },
+      "night-on-accent": { "role": "neutral", "displayName": "Night On Accent", "canonical": "#1a1410", "tonalRamp": ["oklch(15% 0.013 55.5)","oklch(28% 0.013 55.5)","oklch(41% 0.013 55.5)","oklch(54% 0.013 55.5)","oklch(67% 0.013 55.5)","oklch(80% 0.013 55.5)","oklch(90% 0.013 55.5)","oklch(95% 0.013 55.5)"] },
+      "night-danger": { "role": "tertiary", "displayName": "Night Danger", "canonical": "#d47a6a", "tonalRamp": ["oklch(15% 0.116 31.0)","oklch(28% 0.116 31.0)","oklch(41% 0.116 31.0)","oklch(54% 0.116 31.0)","oklch(67% 0.116 31.0)","oklch(80% 0.116 31.0)","oklch(90% 0.116 31.0)","oklch(95% 0.116 31.0)"] },
+      "maintenance-amber": { "role": "primary", "displayName": "Workshop Amber", "canonical": "#8a5610", "tonalRamp": ["oklch(15% 0.104 67.3)","oklch(28% 0.104 67.3)","oklch(41% 0.104 67.3)","oklch(54% 0.104 67.3)","oklch(67% 0.104 67.3)","oklch(80% 0.104 67.3)","oklch(90% 0.104 67.3)","oklch(95% 0.104 67.3)"] },
+      "maintenance-night-amber": { "role": "primary", "displayName": "Night Workshop Amber", "canonical": "#d89b45", "tonalRamp": ["oklch(15% 0.125 72.8)","oklch(28% 0.125 72.8)","oklch(41% 0.125 72.8)","oklch(54% 0.125 72.8)","oklch(67% 0.125 72.8)","oklch(80% 0.125 72.8)","oklch(90% 0.125 72.8)","oklch(95% 0.125 72.8)"] },
+      "inventory-umber": { "role": "primary", "displayName": "Kraft Umber", "canonical": "#7c6038", "tonalRamp": ["oklch(15% 0.067 75.2)","oklch(28% 0.067 75.2)","oklch(41% 0.067 75.2)","oklch(54% 0.067 75.2)","oklch(67% 0.067 75.2)","oklch(80% 0.067 75.2)","oklch(90% 0.067 75.2)","oklch(95% 0.067 75.2)"] },
+      "inventory-night-brass": { "role": "primary", "displayName": "Night Kraft Brass", "canonical": "#c0a276", "tonalRamp": ["oklch(15% 0.069 76.9)","oklch(28% 0.069 76.9)","oklch(41% 0.069 76.9)","oklch(54% 0.069 76.9)","oklch(67% 0.069 76.9)","oklch(80% 0.069 76.9)","oklch(90% 0.069 76.9)","oklch(95% 0.069 76.9)"] },
+      "yard-green": { "role": "primary", "displayName": "Yard Green", "canonical": "#356b31", "tonalRamp": ["oklch(15% 0.106 142.4)","oklch(28% 0.106 142.4)","oklch(41% 0.106 142.4)","oklch(54% 0.106 142.4)","oklch(67% 0.106 142.4)","oklch(80% 0.106 142.4)","oklch(90% 0.106 142.4)","oklch(95% 0.106 142.4)"] },
+      "yard-night-green": { "role": "primary", "displayName": "Night Yard Green", "canonical": "#7fc77a", "tonalRamp": ["oklch(15% 0.129 142.7)","oklch(28% 0.129 142.7)","oklch(41% 0.129 142.7)","oklch(54% 0.129 142.7)","oklch(67% 0.129 142.7)","oklch(80% 0.129 142.7)","oklch(90% 0.129 142.7)","oklch(95% 0.129 142.7)"] },
+      "garden-green": { "role": "primary", "displayName": "Garden Green", "canonical": "#38702e", "tonalRamp": ["oklch(15% 0.115 140.7)","oklch(28% 0.115 140.7)","oklch(41% 0.115 140.7)","oklch(54% 0.115 140.7)","oklch(67% 0.115 140.7)","oklch(80% 0.115 140.7)","oklch(90% 0.115 140.7)","oklch(95% 0.115 140.7)"] },
+      "garden-night-green": { "role": "primary", "displayName": "Night Garden Green", "canonical": "#6fbf57", "tonalRamp": ["oklch(15% 0.161 138.9)","oklch(28% 0.161 138.9)","oklch(41% 0.161 138.9)","oklch(54% 0.161 138.9)","oklch(67% 0.161 138.9)","oklch(80% 0.161 138.9)","oklch(90% 0.161 138.9)","oklch(95% 0.161 138.9)"] },
+      "pool-cyan": { "role": "primary", "displayName": "Pool Cyan", "canonical": "#0e7c99", "tonalRamp": ["oklch(15% 0.098 222.4)","oklch(28% 0.098 222.4)","oklch(41% 0.098 222.4)","oklch(54% 0.098 222.4)","oklch(67% 0.098 222.4)","oklch(80% 0.098 222.4)","oklch(90% 0.098 222.4)","oklch(95% 0.098 222.4)"] },
+      "pool-night-cyan": { "role": "primary", "displayName": "Night Pool Cyan", "canonical": "#4fc5e0", "tonalRamp": ["oklch(15% 0.111 215.6)","oklch(28% 0.111 215.6)","oklch(41% 0.111 215.6)","oklch(54% 0.111 215.6)","oklch(67% 0.111 215.6)","oklch(80% 0.111 215.6)","oklch(90% 0.111 215.6)","oklch(95% 0.111 215.6)"] },
+      "kitchen-terracotta": { "role": "primary", "displayName": "Kitchen Terracotta", "canonical": "#a84624", "tonalRamp": ["oklch(15% 0.138 38.8)","oklch(28% 0.138 38.8)","oklch(41% 0.138 38.8)","oklch(54% 0.138 38.8)","oklch(67% 0.138 38.8)","oklch(80% 0.138 38.8)","oklch(90% 0.138 38.8)","oklch(95% 0.138 38.8)"] },
+      "kitchen-night-terracotta": { "role": "primary", "displayName": "Night Kitchen Terracotta", "canonical": "#db7a52", "tonalRamp": ["oklch(15% 0.133 42.6)","oklch(28% 0.133 42.6)","oklch(41% 0.133 42.6)","oklch(54% 0.133 42.6)","oklch(67% 0.133 42.6)","oklch(80% 0.133 42.6)","oklch(90% 0.133 42.6)","oklch(95% 0.133 42.6)"] }
     },
     "typographyMeta": {
-      "display": { "displayName": "Field Title", "purpose": "Page titles and primary first-run statements." },
-      "headline": { "displayName": "Field Headline", "purpose": "Large statements within the working field." },
-      "title": { "displayName": "Ledger Title", "purpose": "Ledger, rail, and dialog headings." },
-      "body": { "displayName": "Record Body", "purpose": "Descriptions, controls, and records." },
-      "label": { "displayName": "Folio Label", "purpose": "Uppercase labels and table headings." },
-      "metadata": { "displayName": "Coordinate Metadata", "purpose": "Coordinates, counts, and build data only." }
+      "display": { "displayName": "Editorial Display", "purpose": "Page hero titles and their italic phrase emphasis." },
+      "headline": { "displayName": "Journal Headline", "purpose": "First-run and prominent state statements." },
+      "title": { "displayName": "Ledger Title", "purpose": "Ledger, panel, dialog, and statistic titles." },
+      "body": { "displayName": "Journal Body", "purpose": "Explanations and readable supporting copy." },
+      "control": { "displayName": "Working Control", "purpose": "Buttons, tabs, navigation, and compact actions." },
+      "label": { "displayName": "Ledger Label", "purpose": "Table headings and compact record metadata." }
     },
     "shadows": [
-      { "name": "paper-lift", "value": "5px 9px 20px rgb(27 45 54 / 10%)", "purpose": "Light-theme ledger and attention sheets." },
-      { "name": "paper-lift-dark", "value": "5px 9px 22px rgb(1 9 15 / 35%)", "purpose": "Dark-theme ledger and attention sheets." },
-      { "name": "action-lift", "value": "3px 5px 12px rgb(22 75 108 / 18%)", "purpose": "Primary actions only." },
-      { "name": "dialog-lift", "value": "12px 18px 45px rgb(7 25 37 / 28%)", "purpose": "Modal record entry above its backdrop." }
+      { "name": "journal-rest-light", "value": "0 1px 3px rgb(45 27 38 / 10%), 0 6px 16px -6px rgb(45 27 38 / 24%)", "purpose": "Light-theme ledger sheets, panels, cards, tabs, and hero copy." },
+      { "name": "journal-rest-dark", "value": "0 1px 3px rgb(0 0 0 / 50%), 0 6px 18px -6px rgb(0 0 0 / 60%)", "purpose": "Dark-theme working paper." },
+      { "name": "journal-hover-light", "value": "0 4px 10px rgb(45 27 38 / 14%), 0 16px 32px -10px rgb(45 27 38 / 30%)", "purpose": "Light-theme linked cards on hover." },
+      { "name": "journal-hover-dark", "value": "0 4px 12px rgb(0 0 0 / 55%), 0 16px 36px -10px rgb(0 0 0 / 75%)", "purpose": "Dark-theme linked cards on hover." },
+      { "name": "sidebar-light", "value": "0 8px 22px rgb(45 27 38 / 10%), 0 30px 60px -24px rgb(45 27 38 / 28%)", "purpose": "Wide floating navigation over household photography." },
+      { "name": "sidebar-dark", "value": "0 8px 22px rgb(0 0 0 / 38%), 0 30px 60px -24px rgb(0 0 0 / 58%)", "purpose": "Dark-theme floating navigation." },
+      { "name": "dialog", "value": "0 24px 64px rgb(45 27 38 / 28%)", "purpose": "Record creation and revision above a blurred scrim." }
     ],
     "motion": [
-      { "name": "survey-loading", "value": "1.2s ease-out infinite", "purpose": "Directional loading sweep; reduced-motion collapses it to 0.01ms and one iteration." }
+      { "name": "control-state", "value": "150ms ease", "purpose": "Color, border, and background transitions." },
+      { "name": "card-lift", "value": "180ms ease", "purpose": "Linked card shadow and 2px hover rise." },
+      { "name": "drawer", "value": "220ms cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Compact-shell navigation entrance." },
+      { "name": "ember-drift", "value": "7s ease-in-out infinite", "purpose": "Slow decorative embers; individual particles vary to 9.4s." },
+      { "name": "hearth-glow", "value": "5.5s ease-in-out infinite", "purpose": "Dashboard fireplace glow." },
+      { "name": "pool-caustics", "value": "22s linear infinite", "purpose": "Pool hero's slow water movement." },
+      { "name": "loading-shimmer", "value": "1.2s ease-out infinite", "purpose": "Ledger and dashboard loading state." },
+      { "name": "reduced-motion", "value": "0.01ms, 1 iteration", "purpose": "Global override for animations and transitions; card transforms are removed." }
     ],
     "breakpoints": [
-      { "name": "compact-desktop", "value": "1040px" },
-      { "name": "mobile-shell", "value": "780px" },
-      { "name": "record-rows", "value": "600px" },
-      { "name": "stacked-actions", "value": "460px" }
+      { "name": "shell-drawer", "value": "1199px" },
+      { "name": "summary-three", "value": "900px" },
+      { "name": "compact-layout", "value": "720px" },
+      { "name": "record-cards", "value": "600px" },
+      { "name": "single-column", "value": "440px" }
     ]
   },
   "components": [
@@ -59,84 +85,92 @@
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Clipped survey-blue action for recording or advancing work.",
+      "description": "Page-accent pill for the principal record action.",
       "html": "<button class=\"ds-button-primary\">Record entry</button>",
-      "css": ".ds-button-primary { min-height: 42px; padding: 0 15px; border: 1px solid var(--survey-deep); background: var(--survey-deep); color: white; font: 650 1rem Aptos, \"Segoe UI\", system-ui, sans-serif; cursor: pointer; clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); box-shadow: 3px 5px 12px rgb(22 75 108 / 18%); } .ds-button-primary:hover { background: #0f3c59; } .ds-button-primary:focus-visible { outline: 3px solid color-mix(in srgb, var(--survey) 65%, white); outline-offset: 3px; } @media (prefers-color-scheme: dark) { .ds-button-primary { background: #b9e1f3; border-color: #b9e1f3; color: #092236; } .ds-button-primary:hover { background: white; } }"
+      "css": ".ds-button-primary { min-height: 40px; padding: 8px 17px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #5c2a4a; border-radius: 999px; background: #5c2a4a; color: #fff; font: 600 .875rem/1.2 Inter, system-ui, sans-serif; cursor: pointer; transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease, filter 150ms ease; } .ds-button-primary:hover { background: #3f1a33; filter: brightness(1.05); } .ds-button-primary:focus-visible { outline: 3px solid color-mix(in srgb, #5c2a4a 60%, white); outline-offset: 3px; } .ds-button-primary:active { filter: brightness(.96); }"
     },
     {
       "name": "Quiet Button",
       "kind": "button",
       "refersTo": "button-quiet",
-      "description": "Secondary action retaining the clipped fieldbook outline.",
+      "description": "Paper pill for secondary actions that should not compete with record capture.",
       "html": "<button class=\"ds-button-quiet\">Cancel</button>",
-      "css": ".ds-button-quiet { min-height: 42px; padding: 0 15px; border: 1px solid var(--rule-strong); background: transparent; color: var(--ink); font: 650 1rem Aptos, \"Segoe UI\", system-ui, sans-serif; cursor: pointer; clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); } .ds-button-quiet:hover { background: white; border-color: var(--ink); } .ds-button-quiet:focus-visible { outline: 3px solid color-mix(in srgb, var(--survey) 65%, white); outline-offset: 3px; }"
+      "css": ".ds-button-quiet { min-height: 40px; padding: 8px 17px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #ddcba8; border-radius: 999px; background: rgb(251 245 230 / 76%); color: #4a2f3d; font: 600 .875rem/1.2 Inter, system-ui, sans-serif; cursor: pointer; transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease; } .ds-button-quiet:hover { border-color: #5c2a4a; background: #fbf5e6; color: #5c2a4a; } .ds-button-quiet:focus-visible { outline: 3px solid color-mix(in srgb, #5c2a4a 60%, white); outline-offset: 3px; } .ds-button-quiet:active { background: #e8dcc4; }"
     },
     {
-      "name": "Record Field",
+      "name": "Journal Field",
       "kind": "input",
       "refersTo": "input",
-      "description": "Square strong-rule field for household record data.",
+      "description": "Soft paper field for household record data.",
       "html": "<label class=\"ds-field\"><span>Item name <b>*</b></span><input value=\"Boiler\" /></label>",
-      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; color: var(--ink-muted); font: 700 .75rem Aptos, \"Segoe UI\", system-ui, sans-serif; } .ds-field span { color: var(--ink); } .ds-field b { color: var(--utility); } .ds-field input { min-height: 42px; padding: 9px 10px; color: var(--ink); background: color-mix(in srgb, var(--mylar) 80%, white); border: 1px solid var(--rule-strong); border-radius: 0; font: 400 1rem Aptos, \"Segoe UI\", system-ui, sans-serif; } .ds-field input:hover { border-color: var(--ink); } .ds-field input:focus-visible { border-color: var(--survey); outline: 3px solid color-mix(in srgb, var(--survey) 65%, white); outline-offset: 3px; }"
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; color: #2d1b26; font: 700 .75rem/1.35 Inter, system-ui, sans-serif; } .ds-field b { color: #b05945; } .ds-field input { min-height: 42px; padding: 9px 11px; border: 1px solid #ddcba8; border-radius: 10px; background: #fbf5e6; color: #2d1b26; font: 400 .96rem/1.6 Inter, system-ui, sans-serif; } .ds-field input:hover { border-color: #5c2a4a; } .ds-field input:focus-visible { border-color: #5c2a4a; box-shadow: 0 0 0 3px color-mix(in srgb, #5c2a4a 14%, transparent); outline: 0; }"
+    },
+    {
+      "name": "Journal Card",
+      "kind": "card",
+      "refersTo": "journal-card",
+      "description": "The shared working-paper surface for ledgers and dashboard panels.",
+      "html": "<section class=\"ds-journal-card\"><h3>Due and approaching</h3><p>Work and evidence coming up across the home.</p></section>",
+      "css": ".ds-journal-card { padding: 18px 22px; border: 1px solid #ddcba8; border-radius: 14px; background: linear-gradient(180deg, #fbf5e6, #e8dcc4); color: #2d1b26; box-shadow: 0 1px 3px rgb(45 27 38 / 10%), 0 6px 16px -6px rgb(45 27 38 / 24%); font-family: Inter, system-ui, sans-serif; } .ds-journal-card h3 { margin: 0; font: 700 1.42rem/1.1 \"Playfair Display\", Georgia, serif; } .ds-journal-card p { margin: 6px 0 0; color: #6e5e40; font-size: .78rem; } .ds-journal-card:focus-within { outline: 3px solid color-mix(in srgb, #5c2a4a 60%, white); outline-offset: 3px; }"
     },
     {
       "name": "Ledger Tabs",
       "kind": "nav",
-      "description": "Scrollable rule-separated ledger index with ink reversal for the current page.",
-      "html": "<nav class=\"ds-ledger-tabs\"><button aria-current=\"page\">Service ledger</button><button>Warranties</button><button>Costs</button></nav>",
-      "css": ".ds-ledger-tabs { display: flex; overflow-x: auto; border-bottom: 1px solid var(--rule-strong); } .ds-ledger-tabs button { min-height: 48px; padding: 0 17px; white-space: nowrap; border: 0; border-right: 1px solid var(--rule); background: color-mix(in srgb, var(--mylar-deep) 65%, transparent); color: var(--ink-muted); font: 400 1rem Aptos, \"Segoe UI\", system-ui, sans-serif; cursor: pointer; } .ds-ledger-tabs button:hover { color: var(--ink); background: white; } .ds-ledger-tabs button[aria-current=\"page\"] { background: var(--ink); color: var(--mylar); } .ds-ledger-tabs button:focus-visible { outline: 3px solid color-mix(in srgb, var(--survey) 65%, white); outline-offset: -3px; }"
+      "description": "Scrollable paper pill-group for switching ledgers without leaving the room.",
+      "html": "<nav class=\"ds-ledger-tabs\"><button aria-current=\"page\">Home items</button><button>Service ledger</button><button>Warranties</button></nav>",
+      "css": ".ds-ledger-tabs { width: max-content; max-width: 100%; display: flex; overflow-x: auto; border: 1px solid #ddcba8; border-radius: 14px; background: #fbf5e6; box-shadow: 0 1px 3px rgb(45 27 38 / 10%), 0 6px 16px -6px rgb(45 27 38 / 24%); } .ds-ledger-tabs button { min-height: 44px; padding: 8px 17px; flex: 0 0 auto; border: 0; border-right: 1px solid #ddcba8; background: transparent; color: #4a2f3d; font: 600 .8rem Inter, system-ui, sans-serif; cursor: pointer; } .ds-ledger-tabs button:last-child { border-right: 0; } .ds-ledger-tabs button:hover { background: color-mix(in srgb, #5c2a4a 10%, transparent); } .ds-ledger-tabs button[aria-current=\"page\"] { background: color-mix(in srgb, #5c2a4a 18%, #fbf5e6); color: #2d1b26; box-shadow: inset 3px 0 0 #5c2a4a; font-weight: 800; } .ds-ledger-tabs button:focus-visible { outline: 3px solid color-mix(in srgb, #5c2a4a 60%, white); outline-offset: -3px; }"
     },
     {
-      "name": "Ledger Sheet",
-      "kind": "card",
-      "refersTo": "ledger-sheet",
-      "description": "Ruled working sheet for a domain's current records.",
-      "html": "<section class=\"ds-ledger\"><header><div><h2>Service ledger</h2><span>Current ledger</span></div><small>12 entries</small></header><p>Property records continue below this ruled heading.</p></section>",
-      "css": ".ds-ledger { background: color-mix(in srgb, var(--mylar) 94%, white); color: var(--ink); border: 1px solid var(--rule-strong); box-shadow: var(--paper-shadow); clip-path: polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 0 100%); font-family: Aptos, \"Segoe UI\", system-ui, sans-serif; } .ds-ledger header { min-height: 82px; padding: 17px 21px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--rule-strong); } .ds-ledger h2 { margin: 0; font: 650 1.42rem \"Barlow Condensed\", \"Arial Narrow\", sans-serif; } .ds-ledger header span { color: var(--survey-deep); font: 700 .66rem \"SFMono-Regular\", Consolas, monospace; letter-spacing: .09em; text-transform: uppercase; } .ds-ledger small { padding: 7px 10px; border: 1px solid var(--rule); color: var(--ink-muted); } .ds-ledger p { margin: 0; padding: 17px 21px; color: var(--ink-muted); }"
+      "name": "Status Pill",
+      "kind": "chip",
+      "description": "Text-and-dot state treatment that keeps meaning visible beyond hue.",
+      "html": "<span class=\"ds-status ds-status-complete\">completed</span>",
+      "css": ".ds-status { padding: 4px 8px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid color-mix(in srgb, #5c2a4a 30%, #ddcba8); border-radius: 999px; background: color-mix(in srgb, #5c2a4a 10%, transparent); color: #4a2f3d; font: 400 .75rem Inter, system-ui, sans-serif; text-transform: capitalize; } .ds-status::before { content: \"\"; width: 6px; height: 6px; border-radius: 50%; background: #5c2a4a; } .ds-status-complete::before { background: #5f8a4e; } .ds-status-attention::before { background: #c06f2a; } .ds-status:focus-visible { outline: 3px solid color-mix(in srgb, #5c2a4a 60%, white); outline-offset: 3px; }"
     },
     {
-      "name": "Site Legend Entry",
+      "name": "Floating Navigation",
       "kind": "nav",
-      "description": "Coordinate-led desktop navigation entry with clipped active state.",
-      "html": "<a class=\"ds-site-entry active\" href=\"#\"><span>T–00</span><strong>Today</strong></a>",
-      "css": ".ds-site-entry { min-height: 47px; padding: 0 10px; display: grid; grid-template-columns: 37px 1fr; align-items: center; gap: 8px; color: #c7d2d2; background: #172a3b; border: 1px solid transparent; text-decoration: none; font-family: Aptos, \"Segoe UI\", system-ui, sans-serif; } .ds-site-entry > span { color: #82a2ae; font: 400 .62rem \"SFMono-Regular\", Consolas, monospace; } .ds-site-entry:hover { color: white; background: #203b50; } .ds-site-entry.active { color: white; background: #203b50; border-color: #456478; clip-path: polygon(0 0, 96% 0, 100% 20%, 100% 100%, 0 100%); } .ds-site-entry:focus-visible { outline: 3px solid color-mix(in srgb, var(--survey) 65%, white); outline-offset: 3px; }"
-    },
-    {
-      "name": "Status Mark",
-      "kind": "custom",
-      "description": "Text-backed semantic state with a compact rectangular color mark.",
-      "html": "<span class=\"ds-status ds-status-complete\">Completed</span>",
-      "css": ".ds-status { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); font-family: Aptos, \"Segoe UI\", system-ui, sans-serif; text-transform: capitalize; } .ds-status::before { content: \"\"; width: 7px; height: 7px; background: var(--survey); } .ds-status-complete::before { background: var(--garden); } .ds-status-open::before { background: var(--utility); } .ds-status-cancelled::before { background: var(--ink-muted); }"
+      "description": "Translucent household map that floats over the full-bleed room photograph.",
+      "html": "<nav class=\"ds-sidebar\"><strong>Hearth</strong><span>the home you keep</span><a class=\"active\" href=\"#\">Home</a><a href=\"#\">Home maintenance</a><a href=\"#\">Garden</a></nav>",
+      "css": ".ds-sidebar { width: 212px; padding: 20px 12px; display: flex; flex-direction: column; gap: 6px; border-radius: 22px; outline: 1px solid rgb(255 255 255 / 42%); outline-offset: -1px; background: linear-gradient(180deg, rgb(251 245 230 / 46%), rgb(232 220 196 / 54%)); color: #2d1b26; box-shadow: 0 8px 22px rgb(45 27 38 / 10%), 0 30px 60px -24px rgb(45 27 38 / 28%); backdrop-filter: blur(20px) saturate(180%); font-family: Inter, system-ui, sans-serif; } .ds-sidebar strong { font: 700 1.05rem/1.1 \"Playfair Display\", Georgia, serif; } .ds-sidebar > span { margin-bottom: 10px; color: #6e5e40; font-size: .7rem; } .ds-sidebar a { min-height: 34px; padding: 6px 12px; display: flex; align-items: center; border-left: 2px solid transparent; border-radius: 8px; color: #6e5e40; font-size: .825rem; text-decoration: none; transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease; } .ds-sidebar a:hover { background: color-mix(in srgb, #5c2a4a 10%, transparent); color: #4a2f3d; } .ds-sidebar a.active { border-left-color: #5c2a4a; background: color-mix(in srgb, #5c2a4a 16%, transparent); color: #5c2a4a; font-weight: 600; } .ds-sidebar a:focus-visible { outline: 3px solid color-mix(in srgb, #5c2a4a 60%, white); outline-offset: 3px; }"
     }
   ],
   "narrative": {
-    "northStar": "The Property Fieldbook",
-    "overview": "Hearth-v2 treats the household as a mapped working record. Pale drafting mylar, blueprint ink, survey structure, folio coordinates, clipped sheets, and ruled ledgers make the interface feel precise and physical without becoming nostalgic or decorative.\n\nCurrent work occupies the open field while navigation, evidence, and capture tools stay at the perimeter. Density is compact but legible: strong headings orient, one-pixel rules organize, and semantic color marks attention or truth rather than decorating containers.",
+    "northStar": "The Home You Keep",
+    "overview": "Hearth-v2 makes household stewardship feel like returning to a familiar home: page-specific photography fills the viewport, a palette-matched veil quiets it, and warm paper surfaces hold the work. The result is editorial and domestic rather than administrative, while records remain compact and legible.\n\nA floating translucent sidebar keeps the household map close without walling off the photograph. Playfair Display provides the journal voice; Inter carries every control and record. Rounded cards, pills, restrained lift, and route-specific color families keep each ledger distinct without changing its interaction grammar.",
     "keyCharacteristics": [
-      "Ruled fieldbook surfaces rather than a card grid",
-      "Survey-blue structure with sparse utility-orange and garden-green meaning",
-      "Square controls and clipped upper-right corners",
-      "Fixed desktop legend; sticky mast and bottom index on phones",
-      "Light drafting-mylar and dark blueprint-ink themes selected by the operating system"
+      "Byte-identical legacy household wallpapers, full-bleed under palette-matched veils",
+      "One semantic role set exchanged as cohesive light and dark palettes on every route",
+      "A 16px-inset, 212px translucent sidebar with 22px corners on wide screens",
+      "14px journal cards and deliberate pills for actions, tabs, counts, and statuses",
+      "Locally bundled Playfair Display headings paired with Inter records and controls",
+      "Ember, hearth, pool, drawer, and loading motion that yields to reduced-motion preferences"
     ],
     "rules": [
-      { "name": "The Semantic Mark Rule", "body": "Survey blue structures; utility orange demands attention; garden green confirms truth. Pair every color mark with text, position, or shape.", "section": "colors" },
-      { "name": "The Mylar Reversal Rule", "body": "Theme changes reverse the material from pale mylar to blueprint ink without changing hierarchy or meaning.", "section": "colors" },
-      { "name": "The Coordinate Reserve Rule", "body": "Monospace belongs to coordinates and machine-like metadata, never ordinary prose or major headings.", "section": "typography" },
-      { "name": "The Ruled Before Raised Rule", "body": "Establish hierarchy with ink, tonal layers, and one-pixel boundaries before adding a shadow.", "section": "elevation" },
-      { "name": "The One Cut Rule", "body": "Clip only the upper-right corner; do not mix radii, pills, or multiple ornamental cuts into the fieldbook silhouette.", "section": "shapes" }
+      { "name": "The Whole-Room Palette Rule", "body": "A page changes its photograph and its complete semantic ramp together; never recolor only the primary action.", "section": "colors" },
+      { "name": "The Matched Veil Rule", "body": "Photography remains full-bleed and the veil is derived from the active page ground, so content is legible without severing it from the room.", "section": "colors" },
+      { "name": "The Meaning Twice Rule", "body": "Status hue is always accompanied by readable text and a dot, border, or position; color never carries state alone.", "section": "colors" },
+      { "name": "The Two-Type Rule", "body": "Playfair speaks for the home in headings and large values; Inter does the work everywhere else.", "section": "typography" },
+      { "name": "The Work Beside Navigation Rule", "body": "On wide screens the first hero and working surface align beside—not beneath—the floating household map; compact screens use the same map as a drawer.", "section": "layout" },
+      { "name": "The Lift by Job Rule", "body": "Persistent navigation floats deepest, working paper rests lightly, and extra lift appears only for hover or modal focus.", "section": "elevation" },
+      { "name": "The Motion Must Yield Rule", "body": "Ember drift, hearth glow, pool caustics, shimmer, drawer movement, and card lift collapse to effectively static behavior when reduced motion is requested.", "section": "elevation" },
+      { "name": "The Soft Journal Rule", "body": "Use 14px for working paper, 22px for navigation glass, 10px for fields, 8px for compact controls, and full pills only for concise actions or state.", "section": "shapes" }
     ],
     "dos": [
-      "Do use one-pixel rules and tonal layering as the default structure.",
-      "Do keep folio coordinates functional and pair semantic color with readable status text.",
-      "Do preserve the fixed-legend-to-bottom-index responsive transformation.",
-      "Do honor reduced-motion preferences; loading survey motion collapses to effectively static."
+      "Do keep each shipped wallpaper paired with its complete light and dark page palette.",
+      "Do use the semantic role names—paper, ink, line, accent, secondary—so components inherit the active room.",
+      "Do reserve Playfair Display for headings and prominent values; keep controls, forms, and records in Inter.",
+      "Do preserve the 14px journal, 22px sidebar, 10px field, 8px compact-control, and 999px pill hierarchy.",
+      "Do preserve visible 3px keyboard focus and the table-to-labeled-record transformation.",
+      "Do make every ambient or loading animation safe under `prefers-reduced-motion`."
     ],
     "donts": [
-      "Don't turn records into a generic floating-card grid.",
-      "Don't use pills, soft rounded cards, gradients as decoration, or ornamental corner variation.",
-      "Don't use utility orange or garden green as broad surface fills when a compact mark communicates the state.",
-      "Don't use monospace for ordinary body copy or Barlow Condensed for form controls."
+      "Don't collapse the page-specific photography and palettes into one generic dashboard theme.",
+      "Don't place the wallpapers inside cards; they are full-viewport environmental material beneath the interface.",
+      "Don't give every container glass blur or hover lift; depth is assigned by job.",
+      "Don't apply Playfair Display to controls or routine record copy.",
+      "Don't communicate status or destructive intent with color or an unlabeled icon alone.",
+      "Don't restore fieldbook geometry, clipped corners, square controls, or condensed drafting typography."
     ]
   }
 }
