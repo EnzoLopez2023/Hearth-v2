@@ -55,7 +55,7 @@ function AppShell({ children }: { children: ReactNode }) {
           <X aria-hidden="true" />
         </button>
         <header className="wordmark">
-          <img src="/favicon.svg" alt="" aria-hidden="true" />
+          <img src="/icon-192.png" alt="" aria-hidden="true" />
           <div className="brand-copy">
             <div>
               <strong>Hearth</strong>
