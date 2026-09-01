@@ -34,7 +34,11 @@ export function createDashboardRouter(db: HearthDatabase): Router {
     `).all(householdId);
     const poolReadings = db.prepare(`
       SELECT r.* FROM pool_report_results r JOIN pool_reports p ON p.id=r.report_id
-      WHERE r.household_id=? AND (r.value<r.min_target OR r.value>r.max_target)
+      WHERE r.household_id=? AND (
+        r.status IN ('low','high','unbalanced')
+        OR r.value<r.min_target
+        OR r.value>r.max_target
+      )
       ORDER BY p.observed_at DESC LIMIT 20
     `).all(householdId);
     const shopping = db.prepare("SELECT * FROM garden_shopping WHERE household_id=? AND status='needed' ORDER BY name LIMIT 20")
@@ -43,12 +47,37 @@ export function createDashboardRouter(db: HearthDatabase): Router {
       .all(householdId);
     const counts = db.prepare(`
       SELECT
-        (SELECT COUNT(*) FROM home_items WHERE household_id=?) home_items,
-        (SELECT COUNT(*) FROM inventory_items WHERE household_id=?) inventory_items,
-        (SELECT COUNT(*) FROM garden_beds WHERE household_id=?) garden_beds,
-        (SELECT COUNT(*) FROM recipes WHERE household_id=?) recipes,
-        (SELECT COUNT(*) FROM pool_reports WHERE household_id=?) pool_reports
-    `).get(householdId, householdId, householdId, householdId, householdId) as Record<string, number>;
+        (SELECT COUNT(*) FROM home_items WHERE household_id=@household) home_items,
+        (SELECT COUNT(*) FROM maintenance_tasks WHERE household_id=@household) maintenance_tasks,
+        (SELECT COUNT(*) FROM warranties WHERE household_id=@household) warranties,
+        (SELECT COUNT(*) FROM maintenance_photos WHERE household_id=@household) maintenance_photos,
+        (SELECT COUNT(*) FROM maintenance_costs WHERE household_id=@household) maintenance_costs,
+        (SELECT COUNT(*) FROM ai_insights WHERE household_id=@household) maintenance_insights,
+        (SELECT COUNT(*) FROM inventory_categories WHERE household_id=@household) inventory_categories,
+        (SELECT COUNT(*) FROM inventory_locations WHERE household_id=@household) inventory_locations,
+        (SELECT COUNT(*) FROM inventory_sub_locations WHERE household_id=@household) inventory_sub_locations,
+        (SELECT COUNT(*) FROM inventory_items WHERE household_id=@household) inventory_items,
+        (SELECT COUNT(*) FROM inventory_item_images WHERE household_id=@household) inventory_images,
+        (SELECT COUNT(*) FROM yard_location WHERE household_id=@household) yard_locations,
+        (SELECT COUNT(*) FROM yard_tasks WHERE household_id=@household) yard_tasks,
+        (SELECT COUNT(*) FROM weather_daily WHERE household_id=@household) weather_days,
+        (SELECT COUNT(*) FROM garden_fields WHERE household_id=@household) garden_fields,
+        (SELECT COUNT(*) FROM garden_vegetables WHERE household_id=@household) garden_vegetables,
+        (SELECT COUNT(*) FROM garden_beds WHERE household_id=@household) garden_beds,
+        (SELECT COUNT(*) FROM garden_plantings WHERE household_id=@household) garden_plantings,
+        (SELECT COUNT(*) FROM garden_tasks WHERE household_id=@household) garden_tasks,
+        (SELECT COUNT(*) FROM garden_harvests WHERE household_id=@household) garden_harvests,
+        (SELECT COUNT(*) FROM garden_settings WHERE household_id=@household) garden_settings,
+        (SELECT COUNT(*) FROM garden_shopping WHERE household_id=@household) garden_shopping,
+        (SELECT COUNT(*) FROM recipes WHERE household_id=@household) recipes,
+        (SELECT COUNT(*) FROM recipe_ingredients WHERE household_id=@household) recipe_ingredients,
+        (SELECT COUNT(*) FROM recipe_images WHERE household_id=@household) recipe_images,
+        (SELECT COUNT(*) FROM pool_reports WHERE household_id=@household) pool_reports,
+        (SELECT COUNT(*) FROM pool_report_results WHERE household_id=@household) pool_readings,
+        (SELECT COUNT(*) FROM pool_report_recommendations WHERE household_id=@household) pool_recommendations,
+        (SELECT COUNT(*) FROM pool_chemicals WHERE household_id=@household) pool_chemicals,
+        (SELECT COUNT(*) FROM pool_insights WHERE household_id=@household) pool_insights
+    `).get({ household: householdId }) as Record<string, number>;
     const firstRun = Object.values(counts).every((count) => count === 0);
     res.json({
       data: {

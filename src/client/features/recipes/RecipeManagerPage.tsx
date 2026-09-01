@@ -5,12 +5,15 @@ import {
   ChefHat,
   Clock3,
   ExternalLink,
+  FileText,
   Heart,
   Image as ImageIcon,
+  Link2,
   Pencil,
   Plus,
   Search,
   SlidersHorizontal,
+  Sparkles,
   Star,
   Trash2,
   Users,
@@ -107,6 +110,7 @@ interface RecipeDraft {
   tags: string;
   is_favorite: boolean;
   rating: string;
+  parsed_by_ai: boolean;
   nutrition: Nutrition | null;
   ingredients: IngredientDraft[];
 }
@@ -126,6 +130,7 @@ interface RecipePayload {
   tags: string[];
   is_favorite: boolean;
   rating: number | null;
+  parsed_by_ai: boolean;
   nutrition: Nutrition | null;
   ingredients: Array<{
     id?: string;
@@ -188,6 +193,7 @@ function emptyDraft(): RecipeDraft {
     tags: "",
     is_favorite: false,
     rating: "",
+    parsed_by_ai: false,
     nutrition: null,
     ingredients: []
   };
@@ -213,6 +219,7 @@ function detailDraft(recipe: RecipeDetail): RecipeDraft {
     tags: recipe.tags.join(", "),
     is_favorite: recipe.is_favorite,
     rating: recipe.rating === null || recipe.rating <= 0 ? "" : String(recipe.rating),
+    parsed_by_ai: recipe.parsed_by_ai,
     nutrition: recipe.nutrition,
     ingredients: recipe.ingredients.map((ingredient) => ({
       id: ingredient.id,
@@ -240,6 +247,7 @@ function recipePayload(draft: RecipeDraft): RecipePayload {
     tags: draft.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
     is_favorite: draft.is_favorite,
     rating: numberOrNull(draft.rating),
+    parsed_by_ai: draft.parsed_by_ai,
     nutrition: draft.nutrition,
     ingredients: draft.ingredients.map((ingredient) => ({
       ...(ingredient.id ? { id: ingredient.id } : {}),
@@ -247,6 +255,34 @@ function recipePayload(draft: RecipeDraft): RecipePayload {
       quantity: numberOrNull(ingredient.quantity),
       unit: textOrNull(ingredient.unit),
       notes: textOrNull(ingredient.notes)
+    }))
+  };
+}
+
+function payloadDraft(payload: RecipePayload): RecipeDraft {
+  return {
+    name: payload.name,
+    description: payload.description ?? "",
+    cuisine_type: payload.cuisine_type ?? "",
+    meal_type: payload.meal_type,
+    prep_minutes: payload.prep_minutes === null ? "" : String(payload.prep_minutes),
+    cook_minutes: payload.cook_minutes === null ? "" : String(payload.cook_minutes),
+    servings: payload.servings === null ? "" : String(payload.servings),
+    difficulty_level: payload.difficulty_level,
+    instructions: payload.instructions ?? "",
+    notes: payload.notes ?? "",
+    source_url: payload.source_url ?? "",
+    tags: payload.tags.join(", "),
+    is_favorite: payload.is_favorite,
+    rating: payload.rating === null ? "" : String(payload.rating),
+    parsed_by_ai: payload.parsed_by_ai,
+    nutrition: payload.nutrition,
+    ingredients: payload.ingredients.map((ingredient) => ({
+      id: null,
+      name: ingredient.name,
+      quantity: ingredient.quantity === null ? "" : String(ingredient.quantity),
+      unit: ingredient.unit ?? "",
+      notes: ingredient.notes ?? ""
     }))
   };
 }
@@ -366,19 +402,23 @@ function RecipeCard({
 
 function RecipeEditor({
   recipe,
+  initialDraft,
+  aiAssisted,
   busy,
   error,
   onClose,
   onSave
 }: {
   recipe: RecipeDetail | null;
+  initialDraft?: RecipeDraft;
+  aiAssisted: boolean;
   busy: boolean;
   error: string | null;
   onClose: () => void;
   onSave: (payload: RecipePayload) => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
-  const [draft, setDraft] = useState<RecipeDraft>(() => recipe ? detailDraft(recipe) : emptyDraft());
+  const [draft, setDraft] = useState<RecipeDraft>(() => recipe ? detailDraft(recipe) : initialDraft ?? emptyDraft());
   useEffect(() => { dialog.current?.showModal(); }, []);
 
   const updateIngredient = (index: number, field: keyof IngredientDraft, value: string) => {
@@ -416,13 +456,21 @@ function RecipeEditor({
       <form onSubmit={submit}>
         <header className="recipe-dialog-heading">
           <div>
-            <h2 id="recipe-editor-title">{recipe ? "Edit recipe" : "Add a recipe"}</h2>
-            <p>Keep the details you rely on while shopping, cooking, and serving.</p>
+            <h2 id="recipe-editor-title">{recipe ? "Edit recipe" : aiAssisted ? "Review AI recipe" : "Add a recipe"}</h2>
+            <p>{aiAssisted
+              ? "Check the extracted details before adding this recipe to your collection."
+              : "Keep the details you rely on while shopping, cooking, and serving."}</p>
           </div>
           <button className="icon-button" type="button" onClick={onClose} aria-label="Close recipe form"><X aria-hidden="true" /></button>
         </header>
 
         <div className="recipe-editor-body">
+          {aiAssisted && (
+            <div className="ai-review-note" role="status">
+              <Sparkles aria-hidden="true" />
+              <p><strong>AI prepared this draft.</strong> Nothing is saved until you review the source details and choose Save recipe.</p>
+            </div>
+          )}
           <fieldset disabled={busy}>
             <legend>Recipe essentials</legend>
             <div className="recipe-form-grid">
@@ -559,6 +607,118 @@ function RecipeEditor({
         <footer className="recipe-dialog-actions">
           <button className="button button-quiet" type="button" onClick={onClose}>Cancel</button>
           <button className="button button-primary" type="submit" disabled={busy}>{busy ? "Saving recipe..." : "Save recipe"}</button>
+        </footer>
+      </form>
+    </dialog>
+  );
+}
+
+type AiImportMode = "text" | "url";
+
+function aiProviderLabel(provider: string): string {
+  if (provider === "azure-openai") return "Azure OpenAI";
+  if (provider === "anthropic") return "Anthropic";
+  return "AI";
+}
+
+function RecipeAiImportDialog({
+  configured,
+  provider,
+  busy,
+  error,
+  onClose,
+  onExtract
+}: {
+  configured: boolean;
+  provider: string;
+  busy: boolean;
+  error: string | null;
+  onClose: () => void;
+  onExtract: (mode: AiImportMode, value: string) => void;
+}) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const [mode, setMode] = useState<AiImportMode>("text");
+  const [recipeText, setRecipeText] = useState("");
+  const [recipeUrl, setRecipeUrl] = useState("");
+  const value = mode === "text" ? recipeText.trim() : recipeUrl.trim();
+  useEffect(() => { dialog.current?.showModal(); }, []);
+
+  const submit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    onExtract(mode, value);
+  };
+
+  return (
+    <dialog
+      ref={dialog}
+      className="recipe-dialog ai-import-dialog"
+      aria-labelledby="ai-import-title"
+      onCancel={(event) => { event.preventDefault(); if (!busy) onClose(); }}
+    >
+      <form onSubmit={submit}>
+        <header className="recipe-dialog-heading">
+          <div>
+            <h2 id="ai-import-title">Add with AI</h2>
+            <p>Turn recipe text or a public recipe page into an editable draft.</p>
+          </div>
+          <button className="icon-button" type="button" onClick={onClose} disabled={busy} aria-label="Close AI recipe import"><X aria-hidden="true" /></button>
+        </header>
+
+        <div className="ai-import-body">
+          <div className={`ai-provider-note${configured ? "" : " is-unconfigured"}`}>
+            <Sparkles aria-hidden="true" />
+            <div>
+              <strong>{configured ? `${aiProviderLabel(provider)} is ready` : "AI import is not configured"}</strong>
+              <p>{configured
+                ? "Your source is sent to the configured provider only to structure a recipe draft. Review it before saving."
+                : "Configure Azure OpenAI or Anthropic on this Hearth deployment to use AI-assisted recipe import."}</p>
+            </div>
+          </div>
+
+          <div className="ai-import-modes" aria-label="Recipe import source">
+            <button type="button" aria-pressed={mode === "text"} onClick={() => setMode("text")}><FileText aria-hidden="true" />Paste recipe text</button>
+            <button type="button" aria-pressed={mode === "url"} onClick={() => setMode("url")}><Link2 aria-hidden="true" />Import website</button>
+          </div>
+
+          {mode === "text" ? (
+            <label className="ai-import-field">
+              <span>Recipe text</span>
+              <textarea
+                value={recipeText}
+                onChange={(event) => setRecipeText(event.target.value)}
+                placeholder={"Chewy granola bars\n\nIngredients\n2 cups rolled oats...\n\nInstructions\n1. Heat the oven..."}
+                rows={12}
+                minLength={20}
+                maxLength={50_000}
+                required
+                autoFocus
+              />
+              <small>Include the title, ingredients, instructions, timing, and any notes you want preserved.</small>
+            </label>
+          ) : (
+            <label className="ai-import-field">
+              <span>Public recipe URL</span>
+              <input
+                type="url"
+                value={recipeUrl}
+                onChange={(event) => setRecipeUrl(event.target.value)}
+                placeholder="https://example.com/recipe"
+                maxLength={2_048}
+                required
+                autoFocus
+              />
+              <small>Some sites block automated reading. If that happens, copy the recipe and use Paste recipe text.</small>
+            </label>
+          )}
+
+          {error && <div className="inline-error" role="alert">{error}</div>}
+        </div>
+
+        <footer className="recipe-dialog-actions">
+          <button className="button button-quiet" type="button" onClick={onClose} disabled={busy}>Cancel</button>
+          <button className="button button-primary" type="submit" disabled={!configured || busy || !value}>
+            <Sparkles aria-hidden="true" />{busy ? "Structuring recipe..." : "Create AI draft"}
+          </button>
         </footer>
       </form>
     </dialog>
@@ -709,6 +869,14 @@ export function RecipeManagerPage() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [legacyImported, setLegacyImported] = useState(false);
+  const [aiProvider, setAiProvider] = useState<{ configured: boolean; provider: string }>({
+    configured: false,
+    provider: "unconfigured"
+  });
+  const [aiImportOpen, setAiImportOpen] = useState(false);
+  const [aiDraft, setAiDraft] = useState<RecipeDraft | null>(null);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [mealFilter, setMealFilter] = useState("all");
   const [carbFilter, setCarbFilter] = useState("all");
@@ -718,14 +886,22 @@ export function RecipeManagerPage() {
   const [busy, setBusy] = useState(false);
   const [favoriteId, setFavoriteId] = useState<string | null>(null);
   const detailRequest = useRef(0);
+  const aiRequest = useRef<{ fingerprint: string; key: string } | null>(null);
 
   const load = async () => {
     setLoadState("loading");
     setLoadError(null);
     try {
-      const response = await api<{ data: RecipeSummary[]; meta: { legacy_imported: boolean } }>("/api/recipes/collection");
+      const response = await api<{
+        data: RecipeSummary[];
+        meta: {
+          legacy_imported: boolean;
+          ai: { configured: boolean; provider: string };
+        };
+      }>("/api/recipes/collection");
       setRecipes(response.data);
       setLegacyImported(response.meta.legacy_imported);
+      setAiProvider(response.meta.ai);
       setLoadState("ready");
     } catch (error) {
       setLoadError(apiMessage(error));
@@ -766,7 +942,10 @@ export function RecipeManagerPage() {
       const detail = await fetchDetail(recipe.id);
       if (request !== detailRequest.current) return;
       if (mode === "view") setViewing(detail);
-      else setEditing(detail);
+      else {
+        setAiDraft(null);
+        setEditing(detail);
+      }
     } catch (error) {
       if (request === detailRequest.current) setActionError(apiMessage(error));
     }
@@ -776,7 +955,43 @@ export function RecipeManagerPage() {
     detailRequest.current += 1;
     setViewing(null);
     setActionError(null);
+    setAiDraft(null);
     setEditing("new");
+  };
+
+  const openAiImport = () => {
+    detailRequest.current += 1;
+    setViewing(null);
+    setAiError(null);
+    aiRequest.current = null;
+    setAiImportOpen(true);
+  };
+
+  const extractAiDraft = async (mode: AiImportMode, value: string) => {
+    setAiBusy(true);
+    setAiError(null);
+    const fingerprint = `${mode}\0${value}`;
+    if (aiRequest.current?.fingerprint !== fingerprint) {
+      aiRequest.current = { fingerprint, key: crypto.randomUUID() };
+    }
+    try {
+      const response = await api<{ data: RecipePayload; meta: { provider: string; saved: false } }>(
+        `/api/recipes/ai/${mode === "text" ? "extract-text" : "extract-url"}`,
+        {
+          method: "POST",
+          headers: { "Idempotency-Key": aiRequest.current.key },
+          body: JSON.stringify(mode === "text" ? { text: value } : { url: value })
+        }
+      );
+      setAiDraft(payloadDraft(response.data));
+      aiRequest.current = null;
+      setAiImportOpen(false);
+      setEditing("new");
+    } catch (error) {
+      setAiError(apiMessage(error));
+    } finally {
+      setAiBusy(false);
+    }
   };
 
   const saveRecipe = async (payload: RecipePayload) => {
@@ -793,6 +1008,7 @@ export function RecipeManagerPage() {
         }
       );
       setEditing(null);
+      setAiDraft(null);
       setNotice(existing ? "Recipe updated." : "Recipe added to your collection.");
       await load();
     } catch (error) {
@@ -852,8 +1068,13 @@ export function RecipeManagerPage() {
       <PageHero
         title="What you cook"
         accentPhrase="cook"
-        subtitle="Your recipe collection, with the ingredients, timing, nutrition, notes, and kitchen photos that make each dish repeatable."
-        actions={<button className="button button-primary" type="button" onClick={openNewRecipe}><Plus aria-hidden="true" />Add recipe</button>}
+        subtitle="Your recipe collection, with AI-assisted imports and the ingredients, timing, nutrition, notes, and kitchen photos that make each dish repeatable."
+        actions={
+          <>
+            <button className="button button-quiet" type="button" onClick={openAiImport} disabled={loadState === "loading"}><Sparkles aria-hidden="true" />Add with AI</button>
+            <button className="button button-primary" type="button" onClick={openNewRecipe}><Plus aria-hidden="true" />Add recipe</button>
+          </>
+        }
       />
 
       <section className="recipe-tools" aria-label="Find recipes">
@@ -901,7 +1122,10 @@ export function RecipeManagerPage() {
             <p>{legacyImported
               ? "Add the first household recipe with its ingredients, timing, and notes."
               : "This household has no completed legacy import. An approved import will preserve recipe details and photos, or you can start a new recipe here."}</p>
-            <button className="button button-primary" type="button" onClick={openNewRecipe}><Plus aria-hidden="true" />Add recipe</button>
+            <div className="recipe-empty-actions">
+              <button className="button button-quiet" type="button" onClick={openAiImport}><Sparkles aria-hidden="true" />Add with AI</button>
+              <button className="button button-primary" type="button" onClick={openNewRecipe}><Plus aria-hidden="true" />Add recipe</button>
+            </div>
           </div>
         </section>
       )}
@@ -927,13 +1151,25 @@ export function RecipeManagerPage() {
         </section>
       )}
 
+      {aiImportOpen && (
+        <RecipeAiImportDialog
+          configured={aiProvider.configured}
+          provider={aiProvider.provider}
+          busy={aiBusy}
+          error={aiError}
+          onClose={() => { if (!aiBusy) { aiRequest.current = null; setAiImportOpen(false); setAiError(null); } }}
+          onExtract={(mode, value) => void extractAiDraft(mode, value)}
+        />
+      )}
       {editing && (
         <RecipeEditor
-          key={editing === "new" ? "new" : editing.id}
+          key={editing === "new" ? aiDraft ? `ai-${aiDraft.name}` : "new" : editing.id}
           recipe={editing === "new" ? null : editing}
+          {...(aiDraft ? { initialDraft: aiDraft } : {})}
+          aiAssisted={editing === "new" && Boolean(aiDraft)}
           busy={busy}
           error={actionError}
-          onClose={() => { if (!busy) { setEditing(null); setActionError(null); } }}
+          onClose={() => { if (!busy) { setEditing(null); setAiDraft(null); setActionError(null); } }}
           onSave={(payload) => void saveRecipe(payload)}
         />
       )}
@@ -942,7 +1178,7 @@ export function RecipeManagerPage() {
           recipe={viewing}
           busy={busy || favoriteId === viewing.id}
           onClose={() => setViewing(null)}
-          onEdit={() => { setEditing(viewing); setViewing(null); }}
+          onEdit={() => { setAiDraft(null); setEditing(viewing); setViewing(null); }}
           onDelete={() => void deleteRecipe(viewing)}
           onFavorite={() => void toggleFavorite(viewing)}
         />

@@ -15,11 +15,13 @@ function canonical(value: unknown): string {
 export function idempotency(db: HearthDatabase): RequestHandler {
   return (req, res, next) => {
     if (!["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) return next();
+    const originalPath = req.originalUrl.split("?", 1)[0]!;
+    if (originalPath.startsWith("/api/recipes/ai/")) return next();
     const key = req.header("idempotency-key");
     if (!key) return next();
     if (key.length > 200) return next(new HttpError(400, "invalid_idempotency_key", "Idempotency-Key is too long"));
     const auth = req.auth!;
-    const requestPath = req.originalUrl.split("?", 1)[0]!;
+    const requestPath = originalPath;
     const requestHash = createHash("sha256").update(canonical(req.body)).digest("hex");
     const existing = db.prepare(`
       SELECT request_hash,status_code,response_json FROM idempotency_records

@@ -8,6 +8,7 @@ import { createAuthMiddleware } from "./auth.js";
 import { errorHandler, HttpError, notFound, requestContext } from "./http.js";
 import { idempotency } from "./idempotency.js";
 import { createDashboardRouter } from "./domains/dashboard.js";
+import { createRecipeAiRouter } from "./domains/recipe-ai.js";
 import { createDomainRouter } from "./domains/router.js";
 import { createRecipeCollectionRouter } from "./domains/recipes.js";
 import type { createProviders } from "./providers/index.js";
@@ -19,7 +20,6 @@ export function createApp(config: AppConfig, db: HearthDatabase, providers: Prov
   const app = express();
   app.disable("x-powered-by");
   app.use(requestContext);
-  app.use(express.json({ limit: "1mb" }));
 
   const version = Object.freeze({
     version: config.BUILD_VERSION,
@@ -60,10 +60,13 @@ export function createApp(config: AppConfig, db: HearthDatabase, providers: Prov
   });
 
   app.use("/api", createAuthMiddleware(db, config));
+  app.use("/api/blobs", express.json({ limit: "14mb" }));
+  app.use("/api", express.json({ limit: "1mb" }));
   app.use("/api", idempotency(db));
   app.use("/api/blobs", createBlobRouter(db, providers.blob));
   app.use("/api/dashboard", createDashboardRouter(db));
-  app.use("/api/recipes", createRecipeCollectionRouter(db));
+  app.use("/api/recipes/ai", createRecipeAiRouter(db, providers.ai));
+  app.use("/api/recipes", createRecipeCollectionRouter(db, providers.ai.name));
   for (const domain of ["maintenance", "inventory", "yard", "garden", "pool", "recipes"] as const) {
     app.use(`/api/${domain}`, createDomainRouter(db, domain));
   }

@@ -32,7 +32,7 @@ Core ownership tables are `households`, `users`, and `household_memberships`. Th
 - Inventory: categories, locations, sub-locations, items, and images.
 - Yard: mapped locations, tasks, and daily weather.
 - Garden: fields, vegetables, beds, plantings, tasks, harvests, settings, and shopping.
-- Pool: reports, readings, recommendations, chemicals, and insights.
+- Pool: source-backed report metadata, printed and numeric readings, structured recommendations, chemical composition/inventory, and cached insights.
 - Recipes: recipes, ingredients, and images.
 - Operations: settings, blobs, audit, idempotency, migrations, import runs, reconciliation, and permanent identifier mappings.
 
@@ -46,6 +46,6 @@ Local blobs are a development adapter only. Production refuses local filesystem 
 
 ## Legacy import
 
-The importer opens one explicitly named SQLite source read-only and computes canonical per-table hashes before writing. A single transaction writes owned rows, stable identifier mappings, the import fingerprint, and reconciliation evidence. Exact reruns return `no_op`; changed sources, collisions, schema drift, invalid rows, and attachment-bearing sources abort before a partial import can be accepted.
+The importer opens one explicitly named SQLite source read-only and computes canonical per-table hashes before writing. A single transaction writes owned rows, stable identifier mappings, the import fingerprint, and reconciliation evidence. Exact reruns return `no_op`; mapping upgrades can fill only newly introduced fields that remain untouched, while changed sources, collisions, schema drift, invalid rows, and unconfigured attachment-bearing sources abort before a partial import can be accepted.
 
 Legacy data never becomes an implicit startup migration. Cutover remains a separate operator-controlled project after source, blob, count, hash, and user acceptance reconciliation.

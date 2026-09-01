@@ -6,7 +6,8 @@ import type { BlobProvider } from "../providers/index.js";
 
 type SourceRow = Record<string, unknown>;
 type Transform = (row: SourceRow) => unknown;
-const legacyMappingVersion = 2;
+const recipeMappingVersion = 2;
+const legacyMappingVersion = 3;
 
 interface TableMapping {
   target: string;
@@ -75,6 +76,16 @@ const jsonValue = (...candidates: string[]): Transform => (row) => {
     throw new Error(`Legacy JSON field ${candidates.join("/")} is invalid`);
   }
 };
+const jsonProperty = (column: string, property: string): Transform => (row) => {
+  const raw = row[column];
+  if (raw === null || raw === undefined || raw === "") return null;
+  try {
+    const parsed = typeof raw === "string" ? JSON.parse(raw) as Record<string, unknown> : raw as Record<string, unknown>;
+    return parsed[property] ?? null;
+  } catch {
+    throw new Error(`Legacy JSON field ${column} is invalid`);
+  }
+};
 const booleanInteger = (...candidates: string[]): Transform => (row) => {
   const raw = value(...candidates)(row);
   if (raw === null || raw === undefined || raw === "") return 0;
@@ -112,108 +123,173 @@ export const legacyMappings: Record<string, TableMapping> = {
   home_items: { target: "home_items", fields: {
     name: ["name"], description: ["description"], manufacturer: ["manufacturer"], model: ["model", "model_number"],
     serial_number: ["serial_number"], purchased_on: dateValue("purchased_on", "purchase_date"),
-    installed_on: dateValue("installed_on", "installation_date"), qr_identifier: ["qr_identifier"], location: ["location"]
-  }, required: ["name"] },
+    installed_on: dateValue("installed_on", "installation_date"), qr_identifier: ["qr_identifier"], location: ["location"],
+    category: ["category"], estimated_lifespan_years: ["estimated_lifespan_years"],
+    replacement_cost_cents: (row) => row.replacement_cost_cents ?? cents("replacement_cost")(row)
+  }, defaults: { category: "Other" }, required: ["name"] },
   maintenance_tasks: { target: "maintenance_tasks", fields: {
-    home_item_id: ["home_item_id", "item_id"], title: ["title"], description: combinedText(["description", "notes"]),
+    home_item_id: ["home_item_id", "item_id"], title: ["title"], description: ["description"],
     due_on: dateValue("due_on", "due_date", "scheduled_date"), recurrence_days: ["recurrence_days", "recurring_interval_days"],
     status: normalizedStatus("open", { pending: "open", overdue: "open", "in progress": "in_progress", completed: "completed", cancelled: "cancelled" }),
     completed_at: dateTimeValue("completed_at", "completed_date"),
-    priority: (row) => ({ low: "low", medium: "normal", high: "high", critical: "urgent" }[String(row.priority ?? "").toLowerCase()] ?? "normal")
-  }, required: ["title"] },
+    priority: (row) => ({ low: "low", medium: "normal", high: "high", critical: "urgent" }[String(row.priority ?? "").toLowerCase()] ?? "normal"),
+    task_type: ["task_type"], scheduled_on: dateValue("scheduled_on", "scheduled_date"),
+    estimated_duration_hours: ["estimated_duration_hours"], actual_duration_hours: ["actual_duration_hours"],
+    next_due_on: dateValue("next_due_on", "next_due_date"), assigned_to: ["assigned_to"],
+    notes: ["notes"], ai_generated: booleanInteger("ai_generated")
+  }, defaults: { task_type: "Scheduled" }, required: ["title"] },
   warranties: { target: "warranties", fields: {
     home_item_id: ["home_item_id", "item_id"], provider: ["provider"], policy_number: ["policy_number", "warranty_number"],
     starts_on: dateValue("starts_on", "start_date"), expires_on: dateValue("expires_on", "end_date"),
-    notes: combinedText(["notes", "coverage_description", "ai_summary"])
-  }, required: ["home_item_id"] },
+    notes: value("notes", "coverage_description"), warranty_type: ["warranty_type"],
+    claim_process: ["claim_process"], contact_info: ["contact_info"], is_active: booleanInteger("is_active"),
+    ai_analyzed: booleanInteger("ai_analyzed"), ai_summary: ["ai_summary"]
+  }, defaults: { warranty_type: "Manufacturer", is_active: 1 }, required: ["home_item_id"] },
   maintenance_costs: { target: "maintenance_costs", fields: {
     task_id: ["task_id"], home_item_id: ["home_item_id", "item_id"], amount_cents: (row) =>
       row.amount_cents ?? cents("amount")(row), currency: ["currency"], incurred_on: dateValue("incurred_on", "cost_date"),
-    vendor: ["vendor"], notes: combinedText(["notes", "description"])
+    vendor: ["vendor"], notes: ["notes"], cost_type: ["cost_type"], description: ["description"],
+    tax_cents: (row) => row.tax_cents ?? cents("tax_amount")(row),
+    warranty_covered: booleanInteger("warranty_covered"), ai_categorized: booleanInteger("ai_categorized")
   }, defaults: { currency: "USD" }, required: ["amount_cents", "incurred_on"] },
   ai_insights: { target: "ai_insights", fields: {
     domain: () => "maintenance", subject_id: ["subject_id", "item_id"], provider: () => "legacy",
     kind: ["kind", "insight_type"], content: value("content", "description", "title"),
-    status: () => "active"
+    status: (row) => ({ new: "active", acknowledged: "active", "acted upon": "acted_on", dismissed: "dismissed" }[
+      String(row.status ?? "").toLowerCase()
+    ] ?? "active"),
+    title: ["title"], confidence_score: ["confidence_score"],
+    priority: (row) => ({ low: "low", medium: "normal", high: "high", critical: "urgent" }[
+      String(row.priority ?? "").toLowerCase()
+    ] ?? "normal"),
+    predicted_on: dateValue("predicted_on", "predicted_date"),
+    predicted_cost_cents: (row) => row.predicted_cost_cents ?? cents("predicted_cost")(row),
+    source_data: ["source_data"]
   }, required: ["kind", "content"] },
-  inventory_categories: { target: "inventory_categories", fields: { name: ["name"], description: ["description"] }, required: ["name"] },
+  inventory_categories: { target: "inventory_categories", fields: {
+    name: ["name"], description: ["description"], icon: ["icon"], color: ["color"], sort_order: ["sort_order"]
+  }, defaults: { sort_order: 0 }, required: ["name"] },
   inventory_locations: { target: "inventory_locations", fields: {
-    name: ["name"], description: ["description"], qr_identifier: ["qr_identifier"]
-  }, required: ["name"] },
+    name: ["name"], description: ["description"], qr_identifier: ["qr_identifier"], sort_order: ["sort_order"]
+  }, defaults: { sort_order: 0 }, required: ["name"] },
   inventory_sub_locations: { target: "inventory_sub_locations", fields: {
-    location_id: ["location_id"], name: ["name"], description: ["description"]
-  }, required: ["location_id", "name"] },
+    location_id: ["location_id"], name: ["name"], description: ["description"], sort_order: ["sort_order"]
+  }, defaults: { sort_order: 0 }, required: ["location_id", "name"] },
   inventory_items: { target: "inventory_items", fields: {
     category_id: ["category_id"], location_id: ["location_id"], sub_location_id: ["sub_location_id"],
-    name: ["name"], description: combinedText(["description", "notes"]), quantity: ["quantity", "qty"],
+    maintenance_item_id: ["maintenance_item_id"], name: ["name"], description: ["description"], quantity: ["quantity", "qty"],
     low_quantity: ["low_quantity"], unit: ["unit"], expires_on: dateValue("expires_on"), purchased_on: dateValue("purchased_on", "purchase_date"),
-    value_cents: (row) => row.value_cents ?? cents("current_value")(row), qr_identifier: value("qr_identifier", "barcode")
+    value_cents: (row) => row.value_cents ?? cents("current_value")(row),
+    qr_identifier: value("qr_identifier", "barcode"),
+    condition: ["condition"], status: ["status"], brand: ["brand"], model: ["model"],
+    serial_number: ["serial_number"], barcode: ["barcode"], sku: ["sku"], purchased_from: ["purchased_from"],
+    purchase_price_cents: (row) => row.purchase_price_cents ?? cents("purchase_price")(row),
+    product_url: ["product_url"], notes: ["notes"], ai_identified: booleanInteger("ai_identified")
   }, defaults: { quantity: 1 }, required: ["name"] },
   pool_reports: { target: "pool_reports", fields: {
     observed_at: dateTimeValue("observed_at", "test_date", "test_date_text"), status: () => "complete",
-    notes: combinedText(["notes", "summary", "handwritten_notes"]), water_temperature: value("water_temperature", "water_temp_f")
-  }, required: ["observed_at"] },
+    notes: ["notes"], water_temperature: value("water_temperature", "water_temp_f"),
+    water_temperature_f: value("water_temperature_f", "water_temp_f"), test_date_text: ["test_date_text"],
+    report_format: ["report_format"], store_name: ["store_name"], analyst_name: ["analyst_name"],
+    test_id: ["test_id"], pool_volume_gal: ["pool_volume_gal"], pool_type: ["pool_type"],
+    filter_type: ["filter_type"], test_kind: ["test_kind"], custom_ideals: booleanInteger("custom_ideals"),
+    summary: ["summary"], handwritten_notes: ["handwritten_notes"], file_hash: ["file_hash"],
+    raw_parse_json: ["raw_parse_json"], parse_model: ["parse_model"], parse_status: ["parse_status"],
+    parse_error: ["parse_error"], verified_at: dateTimeValue("verified_at")
+  }, defaults: { report_format: "unknown", parse_status: "parsed" }, required: ["observed_at"] },
   pool_report_results: { target: "pool_report_results", fields: {
-    report_id: ["report_id"], metric: ["metric", "parameter"], value: ["value", "value_num"], unit: ["unit"],
-    min_target: ["min_target", "ideal_min"], max_target: ["max_target", "ideal_max"]
-  }, defaults: { unit: "" }, required: ["report_id", "metric", "value"] },
+    report_id: ["report_id"], metric: ["metric", "parameter"], parameter_label: ["parameter_label"],
+    value: ["value", "value_num"], value_text: ["value_text"], unit: ["unit"], ideal_text: ["ideal_text"],
+    min_target: ["min_target", "ideal_min"], max_target: ["max_target", "ideal_max"],
+    status: ["status"], position: value("position", "sort_order")
+  }, defaults: { position: 0 }, required: ["report_id", "metric"] },
   pool_report_recommendations: { target: "pool_report_recommendations", fields: {
     report_id: ["report_id"], title: value("title", "product", "instruction"),
     detail: labeledText([
       ["Source", "source"], ["", "instruction"], ["Quantity", "quantity"], ["Target", "target"],
       ["Timing", "timing"], ["Warnings", "warnings"]
-    ]), priority: () => "normal",
-    status: (row) => row.completed_at ? "completed" : "open"
+    ]), priority: () => "normal", status: (row) => row.completed_at ? "completed" : "open",
+    source: ["source"], product: ["product"], instruction: value("instruction", "title"),
+    quantity_text: value("quantity_text", "quantity"), target: ["target"], timing: ["timing"],
+    warnings: ["warnings"], completed_at: dateTimeValue("completed_at"),
+    position: value("position", "sort_order")
   }, required: ["report_id", "title"] },
   pool_chemicals: { target: "pool_chemicals", fields: {
     name: ["name", "product_name"], quantity: value("quantity", "net_weight_lbs"), unit: ["unit"], low_quantity: ["low_quantity"],
-    expires_on: dateValue("expires_on"), notes: ["notes"]
-  }, defaults: { quantity: 0, unit: "lb" }, required: ["name"] },
+    expires_on: dateValue("expires_on"), notes: ["notes"], category: ["category"],
+    product_name: ["product_name"], brand: ["brand"], active_ingredient: ["active_ingredient"],
+    active_percent: ["active_percent"], available_chlorine_percent: ["available_chlorine_percent"],
+    net_weight_lbs: ["net_weight_lbs"]
+  }, defaults: { quantity: 0, unit: "lb", category: "other" }, required: ["name"] },
   pool_insights: { target: "pool_insights", fields: {
-    report_id: ["report_id"], provider: value("provider", "model"), content: value("content", "payload_json"), status: () => "active"
-  }, defaults: { provider: "legacy" }, required: ["content"] },
+    report_id: ["report_id"], provider: value("provider", "model"), content: value("content", "payload_json"),
+    status: () => "active", payload_json: jsonValue("payload_json"), report_count: ["report_count"],
+    water_health: jsonProperty("payload_json", "water_health"),
+    model: ["model"], generated_at: dateTimeValue("generated_at")
+  }, defaults: { provider: "legacy", report_count: 0 }, required: ["content"] },
   weather_daily: { target: "weather_daily", makeId: (row) =>
     `weather_${hash(`${String(row.date ?? row.observed_on)}:${String(row.lat ?? row.latitude)}:${String(row.lon ?? row.longitude)}`).slice(0, 24)}`, fields: {
     observed_on: ["observed_on", "date"], latitude: ["latitude", "lat"], longitude: ["longitude", "lon"],
     high_c: fahrenheitToCelsius("high_c", "temp_max_f"), low_c: fahrenheitToCelsius("low_c", "temp_min_f"),
     precipitation_mm: (row) => row.precipitation_mm ?? (row.precip_in == null ? null : Number(row.precip_in) * 25.4),
-    conditions: ["conditions", "weather_code"], provider: ["provider"]
+    conditions: ["conditions"], provider: ["provider"], weather_code: ["weather_code"],
+    fetched_at: dateTimeValue("fetched_at")
   }, defaults: { provider: "legacy" }, required: ["observed_on", "latitude", "longitude"] },
   yard_location: { target: "yard_location", fields: {
     name: value("name", "zip"), description: yardDescription, latitude: yardProfile("latitude", "lat"),
-    longitude: yardProfile("longitude", "lon"), area_sq_ft: ["area_sq_ft"], qr_identifier: ["qr_identifier"]
+    longitude: yardProfile("longitude", "lon"), area_sq_ft: ["area_sq_ft"], qr_identifier: ["qr_identifier"],
+    zip: ["zip"], profile_json: jsonValue("profile_json"), profile_at: dateTimeValue("profile_at")
   }, defaults: { name: "Property" }, required: ["name"] },
   garden_fields: { target: "garden_fields", fields: {
-    yard_location_id: ["yard_location_id"], name: ["name"], description: value("description", "notes")
-  }, required: ["name"] },
+    yard_location_id: ["yard_location_id"], name: ["name"], description: value("description", "notes"),
+    sort_order: ["sort_order"]
+  }, defaults: { sort_order: 0 }, required: ["name"] },
   garden_vegetables: { target: "garden_vegetables", fields: {
-    name: ["name"], variety: ["variety"], days_to_maturity: ["days_to_maturity"], notes: ["notes"]
+    name: ["name"], variety: ["variety"], days_to_maturity: ["days_to_maturity"], notes: ["notes"],
+    slug: ["slug"], latin: ["latin"], family: ["family"], emoji: ["emoji"],
+    sow_start_month: ["sow_start_month"], sow_end_month: ["sow_end_month"],
+    harvest_start_month: ["harvest_start_month"], harvest_end_month: ["harvest_end_month"],
+    spacing_in: ["spacing_in"], row_spacing_in: ["row_spacing_in"], depth_in: ["depth_in"],
+    sun: ["sun"], water: ["water"], days_to_germinate: ["days_to_germinate"],
+    indoor_start_weeks_before_frost: ["indoor_start_weeks_before_frost"],
+    transplant_weeks_after_frost: ["transplant_weeks_after_frost"],
+    frost_tolerance: ["frost_tolerance"], companions_json: jsonValue("companions_json"),
+    antagonists_json: jsonValue("antagonists_json"), is_custom: booleanInteger("is_custom"),
+    is_favorite: booleanInteger("is_favorite")
   }, required: ["name"] },
   garden_beds: { target: "garden_beds", fields: {
-    field_id: ["field_id"], name: ["name"], description: value("description", "soil_notes"),
-    area_sq_ft: ["area_sq_ft"], qr_identifier: ["qr_identifier"]
-  }, required: ["name"] },
+    field_id: ["field_id"], name: ["name"], description: ["description"],
+    area_sq_ft: ["area_sq_ft"], qr_identifier: ["qr_identifier"], shape: ["shape"],
+    width_in: ["width_in"], height_in: ["height_in"], pos_x: ["pos_x"], pos_y: ["pos_y"],
+    rotation_deg: ["rotation_deg"], sun_exposure: ["sun_exposure"], soil_notes: ["soil_notes"]
+  }, defaults: { shape: "rect", pos_x: 0, pos_y: 0, rotation_deg: 0 }, required: ["name"] },
   garden_plantings: { target: "garden_plantings", fields: {
     bed_id: ["bed_id"], vegetable_id: ["vegetable_id"], planted_on: dateValue("planted_on", "sown_at", "transplanted_at"),
     expected_harvest_on: dateValue("expected_harvest_on"), quantity: ["quantity", "qty"],
     status: normalizedStatus("planned", { planned: "planned", planted: "planted", growing: "planted", harvesting: "harvesting", finished: "finished", removed: "finished", failed: "failed" }),
-    notes: value("notes", "variety")
+    notes: ["notes"], variety: ["variety"], season_year: ["season_year"], pos_x: ["pos_x"], pos_y: ["pos_y"],
+    sown_at: dateValue("sown_at"), transplanted_at: dateValue("transplanted_at"),
+    first_harvest_at: dateValue("first_harvest_at"), removed_at: dateValue("removed_at")
   }, required: ["bed_id"] },
   garden_tasks: { target: "garden_tasks", fields: {
-    bed_id: ["bed_id"], planting_id: ["planting_id"], title: ["title"], due_on: dateValue("due_on", "due_date"),
-    status: (row) => row.done ? "completed" : "open", priority: ["priority"], notes: value("notes", "detail")
-  }, defaults: { priority: "normal" }, required: ["title"] },
+    bed_id: ["bed_id"], planting_id: ["planting_id"], field_id: ["field_id"], title: ["title"],
+    due_on: dateValue("due_on", "due_date"), status: (row) => row.done ? "completed" : "open",
+    priority: ["priority"], notes: value("notes", "detail"), kind: ["kind"],
+    done_at: dateTimeValue("done_at"), source: ["source"]
+  }, defaults: { priority: "normal", source: "manual" }, required: ["title"] },
   garden_harvests: { target: "garden_harvests", fields: {
     planting_id: ["planting_id"], harvested_on: dateValue("harvested_on", "harvest_date"),
     quantity: value("quantity", "weight_oz", "qty_count"), unit: (row) => row.unit ?? (row.weight_oz != null ? "oz" : "count"),
-    notes: ["notes"]
+    notes: ["notes"], weight_oz: ["weight_oz"], qty_count: ["qty_count"], quality: ["quality"]
   }, required: ["planting_id", "harvested_on", "quantity"] },
   garden_settings: { target: "garden_settings", fields: {
-    setting_key: (row) => `legacy:${String(row.season_year ?? row.id ?? "default")}`, value_json: jsonRow
+    setting_key: (row) => `legacy:${String(row.season_year ?? row.id ?? "default")}`, value_json: jsonRow,
+    season_year: ["season_year"], active_field_id: ["active_field_id"], units: ["units"]
   }, required: ["setting_key", "value_json"] },
   garden_shopping: { target: "garden_shopping", fields: {
-    planting_id: ["planting_id"], name: ["name", "label"], quantity: ["quantity", "qty"], unit: ["unit"],
-    status: (row) => row.checked ? "purchased" : "needed", notes: ["notes"]
+    planting_id: ["planting_id"], vegetable_id: ["vegetable_id"], name: ["name", "label"],
+    quantity: ["quantity"], quantity_text: value("quantity_text", "qty"), unit: ["unit"],
+    status: (row) => row.checked ? "purchased" : "needed", notes: ["notes"], season_year: ["season_year"]
   }, required: ["name"] }
 };
 
@@ -399,7 +475,7 @@ function upgradeLegacyRecipeFields(
         .run(row.data.notes ?? null, row.id, householdId);
     }
     target.prepare("UPDATE legacy_imports SET mapping_version=? WHERE id=? AND household_id=?")
-      .run(legacyMappingVersion, importId, householdId);
+      .run(recipeMappingVersion, importId, householdId);
   })();
 }
 
@@ -523,7 +599,12 @@ function buildAttachmentPlans(
             ? row.item_id === null || row.item_id === undefined ? null : String(row.item_id)
             : String(row.home_item_id),
           blob_id: null,
-          caption: combinedText(["description", "ai_description"])(row)
+          caption: row.description ?? null,
+          photo_category: row.photo_category ?? "General",
+          taken_at: dateTimeValue("taken_at", "taken_date")(row),
+          ai_analyzed: booleanInteger("ai_analyzed")(row),
+          ai_description: row.ai_description ?? null,
+          ai_tags_json: jsonValue("ai_tags_json", "ai_tags")(row)
         }
       }
     });
@@ -548,7 +629,8 @@ function buildAttachmentPlans(
           inventory_item_id: itemId,
           blob_id: null,
           alt_text: row.image_role ?? row.image_name ?? null,
-          position: Number(row.position ?? row.sort_order ?? nextPosition("inventory_item_images", itemId))
+          position: Number(row.position ?? row.sort_order ?? nextPosition("inventory_item_images", itemId)),
+          image_role: row.image_role ?? "photo"
         }
       }
     });
@@ -716,6 +798,251 @@ async function verifyImportedAttachments(
   }
 }
 
+type UntouchedValue = unknown | ((row: Record<string, unknown>) => unknown);
+
+const domainUpgradeFields: Record<string, Record<string, UntouchedValue>> = {
+  home_items: {
+    category: "Other", estimated_lifespan_years: null, replacement_cost_cents: null
+  },
+  maintenance_tasks: {
+    task_type: "Scheduled", scheduled_on: null, estimated_duration_hours: null,
+    actual_duration_hours: null, next_due_on: null, assigned_to: null, notes: null, ai_generated: 0
+  },
+  warranties: {
+    warranty_type: "Manufacturer", claim_process: null, contact_info: null,
+    is_active: 1, ai_analyzed: 0, ai_summary: null
+  },
+  maintenance_costs: {
+    cost_type: "Other", description: null, tax_cents: null,
+    warranty_covered: 0, ai_categorized: 0, receipt_blob_id: null
+  },
+  ai_insights: {
+    title: null, confidence_score: null, priority: "normal",
+    predicted_on: null, predicted_cost_cents: null, source_data: null
+  },
+  inventory_categories: { icon: null, color: null, sort_order: 0 },
+  inventory_locations: { sort_order: 0 },
+  inventory_sub_locations: { sort_order: 0 },
+  inventory_items: {
+    maintenance_item_id: null, condition: "good", status: "active", brand: null,
+    model: null, serial_number: null, barcode: null, sku: null, purchased_from: null,
+    purchase_price_cents: null, product_url: null, notes: null, ai_identified: 0
+  },
+  weather_daily: { weather_code: null, fetched_at: null },
+  yard_location: { zip: null, profile_json: null, profile_at: null },
+  garden_fields: { sort_order: 0 },
+  garden_vegetables: {
+    slug: null, latin: null, family: null, emoji: null, sow_start_month: null,
+    sow_end_month: null, harvest_start_month: null, harvest_end_month: null,
+    spacing_in: null, row_spacing_in: null, depth_in: null, sun: null, water: null,
+    days_to_germinate: null, indoor_start_weeks_before_frost: null,
+    transplant_weeks_after_frost: null, frost_tolerance: null, companions_json: null,
+    antagonists_json: null, is_custom: 0, is_favorite: 0
+  },
+  garden_beds: {
+    shape: "rect", width_in: null, height_in: null, pos_x: 0, pos_y: 0,
+    rotation_deg: 0, sun_exposure: null, soil_notes: null
+  },
+  garden_plantings: {
+    variety: null, season_year: null, pos_x: 0, pos_y: 0, sown_at: null,
+    transplanted_at: null, first_harvest_at: null, removed_at: null
+  },
+  garden_tasks: { field_id: null, kind: null, done_at: null, source: "manual" },
+  garden_harvests: { weight_oz: null, qty_count: null, quality: null },
+  garden_settings: { season_year: null, active_field_id: null, units: null },
+  garden_shopping: { season_year: null, vegetable_id: null, quantity_text: null },
+  pool_reports: {
+    test_date_text: null, report_format: "manual", store_name: null, analyst_name: null,
+    test_id: null, pool_volume_gal: null, pool_type: null, water_temperature_f: null,
+    filter_type: null, test_kind: null, custom_ideals: 0, summary: null,
+    handwritten_notes: null, blob_id: null, file_hash: null, raw_parse_json: null,
+    parse_model: null, parse_status: "manual", parse_error: null, verified_at: null
+  },
+  pool_report_results: {
+    parameter_label: (row: Record<string, unknown>) => row.metric, value_text: null, ideal_text: null,
+    status: (row: Record<string, unknown>) => {
+      const value = typeof row.value === "number" ? row.value : null;
+      if (value === null) return null;
+      if (typeof row.min_target === "number" && value < row.min_target) return "low";
+      if (typeof row.max_target === "number" && value > row.max_target) return "high";
+      return "ok";
+    },
+    position: 0
+  },
+  pool_report_recommendations: {
+    source: null, product: null, instruction: (row: Record<string, unknown>) => row.title, quantity_text: null,
+    target: null, timing: null, warnings: null, completed_at: null, position: 0
+  },
+  pool_chemicals: {
+    category: "other", product_name: (row: Record<string, unknown>) => row.name, brand: null,
+    active_ingredient: null, active_percent: null, available_chlorine_percent: null,
+    net_weight_lbs: null
+  },
+  pool_insights: {
+    payload_json: null, water_health: null, report_count: 0, model: null, generated_at: null
+  }
+};
+
+const changedMappingFields: Record<string, { field: string; previous: string[] | Transform }[]> = {
+  maintenance_tasks: [
+    { field: "description", previous: combinedText(["description", "notes"]) }
+  ],
+  warranties: [
+    { field: "notes", previous: combinedText(["notes", "coverage_description", "ai_summary"]) }
+  ],
+  maintenance_costs: [
+    { field: "notes", previous: combinedText(["notes", "description"]) }
+  ],
+  ai_insights: [
+    { field: "status", previous: () => "active" }
+  ],
+  inventory_items: [
+    { field: "description", previous: combinedText(["description", "notes"]) }
+  ],
+  pool_reports: [
+    { field: "notes", previous: combinedText(["notes", "summary", "handwritten_notes"]) }
+  ],
+  pool_report_results: [
+    { field: "unit", previous: (row) => row.unit ?? "" }
+  ],
+  weather_daily: [
+    { field: "conditions", previous: (row: SourceRow) =>
+      row.conditions ?? (row.weather_code === null || row.weather_code === undefined ? null : String(row.weather_code)) }
+  ],
+  garden_beds: [
+    { field: "description", previous: value("description", "soil_notes") }
+  ],
+  garden_plantings: [
+    { field: "notes", previous: value("notes", "variety") }
+  ],
+  garden_shopping: [
+    { field: "quantity", previous: value("quantity", "qty") }
+  ]
+};
+
+function valuesMatch(left: unknown, right: unknown): boolean {
+  return left === right || (left === null && right === undefined) || (left === undefined && right === null);
+}
+
+function upgradeLegacyDomainFields(
+  target: HearthDatabase,
+  householdId: string,
+  importId: string,
+  sourceNamespace: string,
+  snapshots: Record<string, { rows: SourceRow[]; count: number; hash: string }>,
+  attachmentPlans: AttachmentPlan[]
+): void {
+  const reportsWithHandwrittenRecommendations = new Set(
+    (snapshots.pool_report_recommendations?.rows ?? [])
+      .filter((row) => String(row.source).toLowerCase() === "handwritten")
+      .map((row) => String(row.report_id))
+  );
+  target.transaction(() => {
+    for (const [sourceTable, changes] of Object.entries(changedMappingFields)) {
+      const mapping = legacyMappings[sourceTable];
+      if (!mapping) continue;
+      for (const sourceRow of snapshots[sourceTable]?.rows ?? []) {
+        const id = sourceId(mapping, sourceTable, sourceRow);
+        const current = target.prepare(`
+          SELECT * FROM ${mapping.target} WHERE id=? AND household_id=?
+        `).get(id, householdId) as Record<string, unknown> | undefined;
+        if (!current) throw new Error(`Legacy mapping upgrade conflict: ${mapping.target} ${id} is missing`);
+        for (const change of changes) {
+          const expected = mappedValue(change.previous, sourceRow);
+          if (!valuesMatch(current[change.field], expected)) {
+            throw new Error(`Legacy mapping upgrade conflict: ${mapping.target} ${id} has newer ${change.field} changes`);
+          }
+          const currentSpec = mapping.fields[change.field];
+          let desired = currentSpec ? mappedValue(currentSpec, sourceRow) : null;
+          const fallback = mapping.defaults?.[change.field];
+          if ((desired === null || desired === undefined) && fallback !== undefined) {
+            desired = typeof fallback === "function" ? fallback(sourceRow) : fallback;
+          }
+          target.prepare(`
+            UPDATE ${mapping.target} SET ${change.field}=? WHERE id=? AND household_id=?
+          `).run(desired ?? null, id, householdId);
+        }
+      }
+    }
+
+    for (const [sourceTable, fields] of Object.entries(domainUpgradeFields)) {
+      const mapping = legacyMappings[sourceTable];
+      if (!mapping) continue;
+      const rows = mapLegacyRows(
+        sourceTable,
+        mapping,
+        snapshots[sourceTable]?.rows ?? [],
+        reportsWithHandwrittenRecommendations
+      );
+      const columns = Object.keys(fields);
+      for (const row of rows) {
+        const current = target.prepare(`
+          SELECT * FROM ${mapping.target} WHERE id=? AND household_id=?
+        `).get(row.id, householdId) as Record<string, unknown> | undefined;
+        if (!current) throw new Error(`Legacy mapping upgrade conflict: ${mapping.target} ${row.id} is missing`);
+        for (const [field, expectedValue] of Object.entries(fields)) {
+          const expected = typeof expectedValue === "function" ? expectedValue(current) : expectedValue;
+          if (!valuesMatch(current[field], expected)) {
+            throw new Error(`Legacy mapping upgrade conflict: ${mapping.target} ${row.id} has newer ${field} changes`);
+          }
+        }
+        if (columns.length) {
+          target.prepare(`
+            UPDATE ${mapping.target} SET ${columns.map((column) => `${column}=?`).join(",")}
+            WHERE id=? AND household_id=?
+          `).run(
+            ...columns.map((column) => {
+              if (row.data[column] !== null && row.data[column] !== undefined) return row.data[column];
+              const fallback = fields[column];
+              return typeof fallback === "function" ? fallback(current) : fallback ?? null;
+            }),
+            row.id,
+            householdId
+          );
+        }
+      }
+    }
+
+    for (const plan of attachmentPlans) {
+      if (plan.link && ["maintenance_photos", "inventory_item_images"].includes(plan.link.targetTable)) {
+        const fields = plan.link.targetTable === "maintenance_photos"
+          ? ["photo_category", "taken_at", "ai_analyzed", "ai_description", "ai_tags_json"]
+          : ["image_role"];
+        const current = target.prepare(`
+          SELECT * FROM ${plan.link.targetTable} WHERE id=? AND household_id=?
+        `).get(plan.link.id, householdId) as Record<string, unknown> | undefined;
+        if (!current) throw new Error(`Legacy mapping upgrade conflict: ${plan.link.targetTable} ${plan.link.id} is missing`);
+        const expected = plan.link.targetTable === "maintenance_photos"
+          ? { photo_category: "General", taken_at: null, ai_analyzed: 0, ai_description: null, ai_tags_json: null }
+          : { image_role: "photo" };
+        for (const field of fields) {
+          if (!valuesMatch(current[field], expected[field as keyof typeof expected])) {
+            throw new Error(`Legacy mapping upgrade conflict: ${plan.link.targetTable} ${plan.link.id} has newer ${field} changes`);
+          }
+        }
+        target.prepare(`
+          UPDATE ${plan.link.targetTable} SET ${fields.map((field) => `${field}=?`).join(",")}
+          WHERE id=? AND household_id=?
+        `).run(...fields.map((field) => plan.link!.data[field] ?? null), plan.link.id, householdId);
+      }
+      if (plan.sourceTable === "pool_reports") {
+        const blobId = attachmentIdentity(plan, householdId, sourceNamespace).blobId;
+        const current = target.prepare(`
+          SELECT blob_id FROM pool_reports WHERE id=? AND household_id=?
+        `).get(plan.sourceId, householdId) as { blob_id: string | null } | undefined;
+        if (!current) throw new Error(`Legacy mapping upgrade conflict: pool report ${plan.sourceId} is missing`);
+        if (current.blob_id !== null && current.blob_id !== blobId) {
+          throw new Error(`Legacy mapping upgrade conflict: pool report ${plan.sourceId} has a newer file`);
+        }
+        target.prepare("UPDATE pool_reports SET blob_id=? WHERE id=? AND household_id=?")
+          .run(blobId, plan.sourceId, householdId);
+      }
+    }
+    target.prepare("UPDATE legacy_imports SET mapping_version=? WHERE id=? AND household_id=?")
+      .run(legacyMappingVersion, importId, householdId);
+  })();
+}
+
 export interface LegacyImportResult {
   status: "imported" | "upgraded" | "no_op";
   importId: string;
@@ -798,8 +1125,25 @@ export async function importLegacyDatabase(options: {
       if (existing.mapping_version > legacyMappingVersion) {
         throw new Error("Legacy import conflict: target mapping is newer than this importer");
       }
-      if (existing.mapping_version < legacyMappingVersion) {
+      let upgraded = false;
+      let mappingVersion = existing.mapping_version;
+      if (mappingVersion < recipeMappingVersion) {
         upgradeLegacyRecipeFields(options.target, options.householdId, existing.id, snapshots);
+        mappingVersion = recipeMappingVersion;
+        upgraded = true;
+      }
+      if (mappingVersion < legacyMappingVersion) {
+        upgradeLegacyDomainFields(
+          options.target,
+          options.householdId,
+          existing.id,
+          sourceNamespace,
+          snapshots,
+          attachmentPlans
+        );
+        upgraded = true;
+      }
+      if (upgraded) {
         return {
           status: "upgraded", importId: existing.id, sourceNamespace,
           tables: Object.fromEntries(Object.entries(snapshots).map(([table, item]) => [table, { count: item.count, hash: item.hash }])),
@@ -902,6 +1246,11 @@ export async function importLegacyDatabase(options: {
               ...entries.map(([, item]) => item));
             insertMap(attachment.sourceTable, attachment.sourceId,
               attachment.link.targetTable, attachment.link.id);
+          }
+          if (attachment.sourceTable === "pool_reports") {
+            options.target.prepare(`
+              UPDATE pool_reports SET blob_id=? WHERE id=? AND household_id=?
+            `).run(attachment.blobId, attachment.sourceId, options.householdId);
           }
           insertMap(`${attachment.sourceTable}.${attachment.dataColumn}`, attachment.sourceId,
             "blob_metadata", attachment.blobId, "attachment");

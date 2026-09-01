@@ -48,7 +48,11 @@ export class AzureOpenAiProvider implements AiProvider {
       const response = await fetch(url, {
         method: "POST",
         headers: { "content-type": "application/json", "api-key": this.apiKey },
-        body: JSON.stringify({ messages: [{ role: "user", content: prompt }] })
+        body: JSON.stringify({
+          messages: [{ role: "user", content: prompt }],
+          max_completion_tokens: 4096
+        }),
+        signal: AbortSignal.timeout(60_000)
       });
       if (!response.ok) return { status: "error", provider: this.name, message: `Provider returned ${response.status}` };
       const body = await response.json() as { choices?: { message?: { content?: string } }[] };
@@ -68,7 +72,8 @@ export class AnthropicAiProvider implements AiProvider {
         headers: {
           "content-type": "application/json", "x-api-key": this.apiKey, "anthropic-version": "2023-06-01"
         },
-        body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1024, messages: [{ role: "user", content: prompt }] })
+        body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 4096, messages: [{ role: "user", content: prompt }] }),
+        signal: AbortSignal.timeout(60_000)
       });
       if (!response.ok) return { status: "error", provider: this.name, message: `Provider returned ${response.status}` };
       const body = await response.json() as { content?: { type: string; text?: string }[] };

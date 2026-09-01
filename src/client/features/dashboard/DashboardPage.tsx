@@ -21,13 +21,22 @@ const labels: Record<string, string> = {
   pool_readings: "Pool readings",
   pool_recommendations: "Pool actions"
 };
+const attentionRoutes: Record<string, string> = {
+  maintenance: "/maintenance?ledger=tasks",
+  inventory: "/inventory?ledger=items",
+  warranties: "/maintenance?ledger=warranties",
+  yard: "/yard?ledger=tasks",
+  garden: "/garden?ledger=tasks",
+  pool_readings: "/pool?ledger=readings",
+  pool_recommendations: "/pool?ledger=recommendations"
+};
 
 function itemTitle(item: ApiRow): string {
-  return String(item.title ?? item.name ?? item.metric ?? "Property entry");
+  return String(item.title ?? item.name ?? item.parameter_label ?? item.metric ?? "Property entry");
 }
 
 function itemMeta(item: ApiRow): string {
-  const parts = [item.due_on, item.expires_on, item.priority, item.status].filter(Boolean);
+  const parts = [item.due_on, item.expires_on, item.value_text, item.priority, item.status].filter(Boolean);
   return parts.map(String).join(" · ") || "Recorded evidence";
 }
 
@@ -114,7 +123,7 @@ export function DashboardPage() {
                   <li key={`${kind}-${item.id}`}>
                     <span className={`domain-pin pin-${kind.split("_")[0]}`} aria-hidden="true" />
                     <div><b>{itemTitle(item)}</b><span>{labels[kind]} · {itemMeta(item)}</span></div>
-                    <Link to={`/${kind.startsWith("pool") ? "pool" : kind === "warranties" ? "maintenance" : kind}`} aria-label={`Open ${labels[kind]} ledger`}><ArrowUpRight aria-hidden="true" /></Link>
+                    <Link to={attentionRoutes[kind] ?? "/"} aria-label={`Open ${labels[kind]} ledger`}><ArrowUpRight aria-hidden="true" /></Link>
                   </li>
                 ))}
               </ol>

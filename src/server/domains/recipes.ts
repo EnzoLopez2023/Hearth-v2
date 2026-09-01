@@ -29,6 +29,7 @@ const recipeInputSchema = z.strictObject({
   tags: tagsSchema.default([]),
   is_favorite: z.boolean().default(false),
   rating: z.number().min(0).max(5).nullable().optional(),
+  parsed_by_ai: z.boolean().optional(),
   nutrition: nutritionSchema.nullable().optional(),
   ingredients: z.array(ingredientSchema).max(250).default([])
 });
@@ -305,6 +306,7 @@ function recipeValues(data: z.infer<typeof recipeInputSchema>) {
     data.source_url ?? null,
     data.is_favorite ? 1 : 0,
     data.rating ?? null,
+    data.parsed_by_ai === undefined ? undefined : data.parsed_by_ai ? 1 : 0,
     JSON.stringify(data.tags),
     data.nutrition === undefined
       ? undefined
@@ -314,7 +316,10 @@ function recipeValues(data: z.infer<typeof recipeInputSchema>) {
   ] as const;
 }
 
-export function createRecipeCollectionRouter(db: HearthDatabase): Router {
+export function createRecipeCollectionRouter(
+  db: HearthDatabase,
+  aiProvider: "azure-openai" | "anthropic" | "unconfigured"
+): Router {
   const router = Router();
 
   router.get("/collection", (req, res) => {
@@ -326,7 +331,13 @@ export function createRecipeCollectionRouter(db: HearthDatabase): Router {
     const imported = Boolean(db.prepare(`
       SELECT 1 FROM legacy_imports WHERE household_id=? LIMIT 1
     `).get(req.auth!.householdId));
-    res.json({ data: rows.map(serializeRecipe), meta: { legacy_imported: imported } });
+    res.json({
+      data: rows.map(serializeRecipe),
+      meta: {
+        legacy_imported: imported,
+        ai: { configured: aiProvider !== "unconfigured", provider: aiProvider }
+      }
+    });
   });
 
   router.get("/collection/:id", (req, res) => {
@@ -344,9 +355,18 @@ export function createRecipeCollectionRouter(db: HearthDatabase): Router {
         INSERT INTO recipes(
           id,household_id,name,description,cuisine_type,meal_type,prep_minutes,cook_minutes,
           total_minutes,servings,difficulty_level,instructions,notes,source_url,is_favorite,
-          rating,tags_json,nutrition_json,created_at,updated_at
-        ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-      `).run(id, auth.householdId, ...values.slice(0, 15), values[15] ?? null, now, now);
+          rating,parsed_by_ai,tags_json,nutrition_json,created_at,updated_at
+        ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      `).run(
+        id,
+        auth.householdId,
+        ...values.slice(0, 14),
+        values[14] ?? 0,
+        values[15],
+        values[16] ?? null,
+        now,
+        now
+      );
       insertIngredients(db, auth.householdId, id, data.ingredients, now);
       writeAudit(db, auth, req.requestId, "create", "recipes", id);
     })();
@@ -365,14 +385,19 @@ export function createRecipeCollectionRouter(db: HearthDatabase): Router {
         UPDATE recipes SET
           name=?,description=?,cuisine_type=?,meal_type=?,prep_minutes=?,cook_minutes=?,
           total_minutes=?,servings=?,difficulty_level=?,instructions=?,notes=?,source_url=?,
-          is_favorite=?,rating=?,tags_json=?,
+          is_favorite=?,rating=?,
+          parsed_by_ai=CASE WHEN ? IS NULL THEN parsed_by_ai ELSE ? END,
+          tags_json=?,
           nutrition_json=CASE WHEN ? IS NULL THEN nutrition_json ELSE ? END,
           updated_at=?
         WHERE id=? AND household_id=?
       `).run(
-        ...values.slice(0, 15),
-        values[15] === undefined ? null : 1,
-        values[15] ?? null,
+        ...values.slice(0, 14),
+        values[14] === undefined ? null : 1,
+        values[14] ?? 0,
+        values[15],
+        values[16] === undefined ? null : 1,
+        values[16] ?? null,
         now,
         id,
         auth.householdId

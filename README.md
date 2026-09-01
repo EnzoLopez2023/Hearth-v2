@@ -51,6 +51,10 @@ All routes except the operational endpoints require an authorized household memb
 
 Each ledger supports list, get, create, patch, and delete operations with strict Zod validation, household-scoped references, audit records, structured failures, and optional `Idempotency-Key` replay protection.
 
+Every owned legacy record field is either mapped to the normalized ledgers or explicitly refused when it points to external, non-durable content; fields are not silently discarded. Complete-record views expose the mapped data. New maintenance photos, warranty documents, cost receipts, inventory images, and source pool reports use authorized durable blob references; Pool Maintenance keeps printed and numeric readings, ideal ranges, statuses, structured treatment steps, report provenance, chemical strength, and cached insight metadata as separate queryable fields.
+
+Recipe Manager also exposes review-before-save AI imports at `POST /api/recipes/ai/extract-text` and `POST /api/recipes/ai/extract-url`. They use the configured Azure OpenAI or Anthropic adapter, return an editable recipe draft, and never create a recipe automatically. Website import permits only public HTTP(S) pages on standard ports, blocks private-network destinations and unsafe redirects, and recommends text import when a site blocks automated reading. AI requests require an idempotency key, coalesce matching in-flight retries in bounded memory, cap provider output, and enforce rolling per-user and per-household usage limits without persisting unsaved draft content.
+
 Public operations:
 
 - `GET /version.json` and `GET /api/version` — `BUILD_VERSION`, `SOURCE_SHA`, and `BUILD_TIME`.
