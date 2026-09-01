@@ -21,6 +21,8 @@ npm start
 
 `npm run build` is the sole release decision. `npm test` runs focused informational tests for migrations, SQLite pragmas, validation, household ownership, QR preservation, idempotency, and legacy reconciliation.
 
+The browser identity is generated from `src/client/public/app-icon-1024.png`, whose canonical SHA-256 is enforced by `npm run icons:check`. Run `npm run icons:generate` to reproduce the committed favicon, Apple touch icon, PWA icons, and web manifest; the build and CI reject changed derivative bytes, alternate identity files, or undeclared icon references.
+
 ## Architecture
 
 The project is one TypeScript workspace:
