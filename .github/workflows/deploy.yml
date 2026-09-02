@@ -21,11 +21,12 @@ env:
   ACR_NAME: ${{ vars.AZURE_ACR_NAME }}
   WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
   IMAGE_REPOSITORY: hearth-v2
+  DIAGNOSTIC_RECORDS: deployment-diagnostics/records.jsonl
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - name: Checkout exact source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -36,10 +37,46 @@ jobs:
           node-version: 24
           cache: npm
 
-      - name: Run release build
+      - name: Install exact dependencies
         run: |
           set -euo pipefail
           npm ci --no-audit --no-fund
+
+      - name: Diagnostic - production dependency audit
+        uses: ./.github/actions/deployment-diagnostic
+        with:
+          check-id: source-dependency-audit
+          category: source-audit
+          phase: pre-build
+          mode: run
+          report: reports/npm-audit.json
+          report-format: npm-audit-json
+          records: ${{ env.DIAGNOSTIC_RECORDS }}
+          timeout-ms: '300000'
+          run: |
+            set -euo pipefail
+            mkdir -p reports
+            npm audit --omit=dev --audit-level=high --json > reports/npm-audit.json
+
+      - name: Diagnostic - source dependency SBOM
+        uses: ./.github/actions/deployment-diagnostic
+        with:
+          check-id: source-sbom
+          category: sbom
+          phase: pre-build
+          mode: run
+          report: reports/source-sbom.cdx.json
+          report-format: cyclonedx-json
+          records: ${{ env.DIAGNOSTIC_RECORDS }}
+          timeout-ms: '300000'
+          run: |
+            set -euo pipefail
+            mkdir -p reports
+            npm sbom --sbom-format=cyclonedx > reports/source-sbom.cdx.json
+
+      - name: Run release build
+        run: |
+          set -euo pipefail
           npm run build
 
       - name: Azure login with OIDC
@@ -48,6 +85,89 @@ jobs:
           client-id: ${{ env.AZURE_CLIENT_ID }}
           tenant-id: ${{ env.AZURE_TENANT_ID }}
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Diagnostic - migration compatibility
+        uses: ./.github/actions/deployment-diagnostic
+        with:
+          check-id: migration-compatibility-precheck
+          category: migration-precondition
+          phase: pre-activation
+          mode: run
+          report: reports/migration-compatibility.json
+          report-format: generic-json
+          records: ${{ env.DIAGNOSTIC_RECORDS }}
+          timeout-ms: '60000'
+          run: |
+            node scripts/deployment-precheck.mjs migration \
+              --base-url "https://${WEBAPP_NAME}.azurewebsites.net" \
+              --report reports/migration-compatibility.json
+
+      - name: Diagnostic - recovery precondition
+        uses: ./.github/actions/deployment-diagnostic
+        with:
+          check-id: recovery-precondition-precheck
+          category: recovery-precondition
+          phase: pre-activation
+          mode: run
+          report: reports/recovery-precondition.json
+          report-format: generic-json
+          records: ${{ env.DIAGNOSTIC_RECORDS }}
+          timeout-ms: '60000'
+          run: |
+            node scripts/deployment-precheck.mjs recovery \
+              --base-url "https://${WEBAPP_NAME}.azurewebsites.net" \
+              --report reports/recovery-precondition.json
+
+      - name: Diagnostic - pre-activation readiness
+        uses: ./.github/actions/deployment-diagnostic
+        with:
+          check-id: readiness-precondition-precheck
+          category: readiness-precondition
+          phase: pre-activation
+          mode: run
+          report: reports/readiness-precondition.json
+          report-format: generic-json
+          records: ${{ env.DIAGNOSTIC_RECORDS }}
+          timeout-ms: '60000'
+          run: |
+            node scripts/deployment-precheck.mjs readiness \
+              --base-url "https://${WEBAPP_NAME}.azurewebsites.net" \
+              --report reports/readiness-precondition.json
+
+      - name: Diagnostic - monitoring resources
+        uses: ./.github/actions/deployment-diagnostic
+        with:
+          check-id: monitoring-precheck
+          category: monitoring-precheck
+          phase: pre-activation
+          mode: run
+          report: reports/monitoring-precheck.json
+          report-format: generic-json
+          records: ${{ env.DIAGNOSTIC_RECORDS }}
+          timeout-ms: '120000'
+          run: |
+            node scripts/deployment-precheck.mjs monitoring \
+              --resource-group "$RESOURCE_GROUP" \
+              --webapp "$WEBAPP_NAME" \
+              --report reports/monitoring-precheck.json
+
+      - name: Diagnostic - protected configuration
+        uses: ./.github/actions/deployment-diagnostic
+        with:
+          check-id: protected-configuration-precheck
+          category: protected-configuration-precheck
+          phase: pre-activation
+          mode: run
+          report: reports/protected-configuration.json
+          report-format: generic-json
+          records: ${{ env.DIAGNOSTIC_RECORDS }}
+          timeout-ms: '120000'
+          run: |
+            node scripts/deployment-precheck.mjs protected-configuration \
+              --resource-group "$RESOURCE_GROUP" \
+              --webapp "$WEBAPP_NAME" \
+              --image-prefix "${ACR_NAME}.azurecr.io/${IMAGE_REPOSITORY}" \
+              --report reports/protected-configuration.json
 
       - name: Build and push immutable image
         id: image
@@ -78,6 +198,174 @@ jobs:
           image="${login_server}/${IMAGE_REPOSITORY}@${digest}"
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
           echo "image=$image" >> "$GITHUB_OUTPUT"
+          {
+            echo "DIAGNOSTIC_BUILD_ID=$build_id"
+            echo "DIAGNOSTIC_CANDIDATE_DIGEST=$digest"
+          } >> "$GITHUB_ENV"
+
+      - name: Generate exact-image SPDX SBOM
+        id: image-sbom
+        continue-on-error: true
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.20.8
+        with:
+          image: ${{ steps.image.outputs.image }}
+          format: spdx-json
+          output-file: reports/image-sbom.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+
+      - name: Diagnostic - record exact-image SBOM
+        if: ${{ always() }}
+        uses: ./.github/actions/deployment-diagnostic
+        with:
+          check-id: image-sbom
+          category: sbom
+          phase: pre-activation
+          mode: record
+          exit-code: ${{ steps.image-sbom.outcome == 'success' && '0' || '1' }}
+          report: reports/image-sbom.spdx.json
+          report-format: spdx-json
+          records: ${{ env.DIAGNOSTIC_RECORDS }}
+
+      - name: Scan exact image for HIGH and CRITICAL vulnerabilities
+        id: image-scan
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ steps.image.outputs.image }}
+          format: json
+          output: reports/trivy-image.json
+          exit-code: '0'
+          ignore-unfixed: false
+          severity: HIGH,CRITICAL
+          scanners: vuln
+          timeout: 10m
+
+      - name: Diagnostic - record image vulnerability scan
+        if: ${{ always() }}
+        uses: ./.github/actions/deployment-diagnostic
+        with:
+          check-id: image-vulnerability-scan
+          category: image-scan
+          phase: pre-activation
+          mode: record
+          exit-code: ${{ steps.image-scan.outcome == 'success' && '0' || '1' }}
+          report: reports/trivy-image.json
+          report-format: trivy-json
+          records: ${{ env.DIAGNOSTIC_RECORDS }}
+
+      - name: Install Cosign for diagnostic verification
+        id: cosign
+        continue-on-error: true
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Diagnostic - signature verification
+        uses: ./.github/actions/deployment-diagnostic
+        with:
+          check-id: signature-verification
+          category: signature-provenance
+          phase: pre-activation
+          mode: run
+          report: reports/signature-verification.json
+          report-format: generic-json
+          evidence: reports/cosign-signature.json
+          records: ${{ env.DIAGNOSTIC_RECORDS }}
+          timeout-ms: '120000'
+          run: |
+            set -uo pipefail
+            mkdir -p reports
+            rm -f reports/cosign-signature.json reports/signature-verification.json
+            workflow_identity="https://github.com/${GITHUB_REPOSITORY}/.github/workflows/deploy.yml@${GITHUB_REF}"
+            signature_output="$(cosign verify \
+              --certificate-identity "$workflow_identity" \
+              --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+              "${{ steps.image.outputs.image }}" 2>&1)"
+            signature_status=$?
+            printf '%s\n' "$signature_output" >&2
+            verified=false
+            if [[ "$signature_status" -eq 0 ]]; then
+              verified=true
+              printf '%s\n' "$signature_output" > reports/cosign-signature.json
+            fi
+            jq -n \
+              --arg tool cosign \
+              --arg identity "$workflow_identity" \
+              --arg issuer https://token.actions.githubusercontent.com \
+              --argjson verified "$verified" \
+              --argjson exitCode "$signature_status" \
+              '{tool: $tool, certificate_identity: $identity, certificate_oidc_issuer: $issuer, verified: $verified, exit_code: $exitCode}' \
+              > reports/signature-verification.json
+            exit "$signature_status"
+
+      - name: Diagnostic - provenance and SBOM attestation verification
+        uses: ./.github/actions/deployment-diagnostic
+        with:
+          check-id: provenance-attestation-verification
+          category: signature-provenance
+          phase: pre-activation
+          mode: run
+          report: reports/attestation-verification.json
+          report-format: generic-json
+          evidence: |
+            reports/cosign-provenance.json
+            reports/cosign-sbom-attestation.json
+          records: ${{ env.DIAGNOSTIC_RECORDS }}
+          timeout-ms: '180000'
+          run: |
+            set -uo pipefail
+            mkdir -p reports
+            rm -f reports/cosign-provenance.json reports/cosign-sbom-attestation.json reports/attestation-verification.json
+            workflow_identity="https://github.com/${GITHUB_REPOSITORY}/.github/workflows/deploy.yml@${GITHUB_REF}"
+
+            provenance_output="$(cosign verify-attestation \
+              --type slsaprovenance1 \
+              --certificate-identity "$workflow_identity" \
+              --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+              "${{ steps.image.outputs.image }}" 2>&1)"
+            provenance_status=$?
+            printf 'SLSA provenance: %s\n' "$provenance_output" >&2
+            provenance_verified=false
+            if [[ "$provenance_status" -eq 0 ]]; then
+              provenance_verified=true
+              printf '%s\n' "$provenance_output" > reports/cosign-provenance.json
+            fi
+
+            sbom_output="$(cosign verify-attestation \
+              --type spdxjson \
+              --certificate-identity "$workflow_identity" \
+              --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+              "${{ steps.image.outputs.image }}" 2>&1)"
+            sbom_status=$?
+            printf 'SPDX SBOM attestation: %s\n' "$sbom_output" >&2
+            sbom_verified=false
+            if [[ "$sbom_status" -eq 0 ]]; then
+              sbom_verified=true
+              printf '%s\n' "$sbom_output" > reports/cosign-sbom-attestation.json
+            fi
+
+            overall_status=0
+            if [[ "$provenance_status" -eq 126 || "$provenance_status" -eq 127 ||
+                  "$sbom_status" -eq 126 || "$sbom_status" -eq 127 ]]; then
+              overall_status=127
+            elif [[ "$provenance_status" -ne 0 || "$sbom_status" -ne 0 ]]; then
+              overall_status=1
+            fi
+            jq -n \
+              --arg tool cosign \
+              --arg identity "$workflow_identity" \
+              --arg issuer https://token.actions.githubusercontent.com \
+              --argjson provenanceVerified "$provenance_verified" \
+              --argjson provenanceExitCode "$provenance_status" \
+              --argjson sbomVerified "$sbom_verified" \
+              --argjson sbomExitCode "$sbom_status" \
+              '{
+                tool: $tool,
+                certificate_identity: $identity,
+                certificate_oidc_issuer: $issuer,
+                slsa_provenance: {verified: $provenanceVerified, exit_code: $provenanceExitCode},
+                spdx_sbom: {verified: $sbomVerified, exit_code: $sbomExitCode}
+              }' > reports/attestation-verification.json
+            exit "$overall_status"
 
       - name: Pin exact digest and verify
         id: deploy
@@ -163,3 +451,42 @@ jobs:
             --name "${IMAGE_REPOSITORY}:latest" \
             --query digest -o tsv)"
           [[ "$promoted_digest" == "$digest" ]]
+
+      - name: Aggregate deployment diagnostics
+        id: aggregate-diagnostics
+        if: ${{ always() }}
+        continue-on-error: true
+        uses: ./.github/actions/deployment-diagnostic
+        with:
+          check-id: aggregate
+          category: nested-checker
+          phase: pre-activation
+          mode: aggregate
+          records: ${{ env.DIAGNOSTIC_RECORDS }}
+
+      - name: Warn if diagnostic aggregation failed
+        if: ${{ always() && steps.aggregate-diagnostics.outcome == 'failure' }}
+        run: >-
+          echo "::warning title=Deployment diagnostics aggregation::The best-effort
+          aggregation step failed; inspect individual diagnostic warnings and uploaded reports."
+
+      - name: Upload deployment diagnostic evidence
+        id: upload-diagnostics
+        if: ${{ always() }}
+        continue-on-error: true
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: deployment-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            deployment-diagnostics/records.jsonl
+            deployment-diagnostics/records-summary.json
+            reports/
+          if-no-files-found: warn
+          retention-days: 30
+          include-hidden-files: false
+
+      - name: Warn if diagnostic evidence upload failed
+        if: ${{ always() && steps.upload-diagnostics.outcome == 'failure' }}
+        run: >-
+          echo "::warning title=Deployment diagnostics upload::The best-effort diagnostic
+          evidence upload failed; findings remain visible in annotations and the job summary."
