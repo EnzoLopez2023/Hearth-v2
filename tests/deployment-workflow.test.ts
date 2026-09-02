@@ -19,6 +19,10 @@ const workflow = readFileSync(
   new URL("../.github/workflows/deploy.yml", import.meta.url),
   "utf8"
 );
+const ciWorkflow = readFileSync(
+  new URL("../.github/workflows/ci.yml", import.meta.url),
+  "utf8"
+);
 const action = readFileSync(
   new URL("../.github/actions/deployment-diagnostic/action.yml", import.meta.url),
   "utf8"
@@ -242,6 +246,10 @@ describe("production deployment workflow", () => {
     for (const use of remoteUses) {
       expect(use).toMatch(/@[0-9a-f]{40}$/);
     }
+  });
+
+  it("runs the deployment contract suite in pull-request CI", () => {
+    expect(ciWorkflow).toMatch(/- run: npm ci\s+- run: npm test/);
   });
 });
 
